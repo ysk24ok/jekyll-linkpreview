@@ -1,5 +1,6 @@
 require "bundler/setup"
-require "jekyll/linkpreview"
+require "jekyll"
+require "jekyll-linkpreview"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
