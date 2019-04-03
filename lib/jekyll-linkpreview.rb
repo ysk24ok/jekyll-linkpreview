@@ -1,3 +1,6 @@
+require "digest"
+require "json"
+
 require "metainspector"
 require "jekyll-linkpreview/version"
 
@@ -7,15 +10,16 @@ module Jekyll
       def initialize(tag_name, markup, parse_context)
         super
         @markup = markup.rstrip()
+        @cache_filepath = "_cache/%s.json" % Digest::MD5.hexdigest(@markup)
       end
 
       def render(context)
         properties = get_properties()
-        title       = properties[:title]
-        url         = properties[:url]
-        image       = properties[:image]
-        description = properties[:description]
-        domain      = properties[:domain]
+        title       = properties['title']
+        url         = properties['url']
+        image       = properties['image']
+        description = properties['description']
+        domain      = properties['domain']
         if title.nil? || url.nil? || image.nil? then
           html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
@@ -51,15 +55,21 @@ module Jekyll
       end
 
       def get_properties()
-        properties = fetch_og_properties()
-        url = get_og_property(properties, 'og:url')
-        {
-          :title        => get_og_property(properties, 'og:title'),
-          :url          => url,
-          :image        => get_og_property(properties, 'og:image'),
-          :description  => get_og_property(properties, 'og:description'),
-          :domain       => extract_domain(url)
-        }
+        if File.exist?(@cache_filepath) then
+          return load_cache_file
+        else
+          og_properties = fetch_og_properties()
+          url = get_og_property(og_properties, 'og:url')
+          properties = {
+            'title'       => get_og_property(og_properties, 'og:title'),
+            'url'         => url,
+            'image'       => get_og_property(og_properties, 'og:image'),
+            'description' => get_og_property(og_properties, 'og:description'),
+            'domain'      => extract_domain(url)
+          }
+          save_cache_file(properties)
+          return properties
+        end
       end
 
       private
@@ -81,6 +91,16 @@ module Jekyll
           return nil
         end
         url.match(%r{(http|https)://([^/]+).*})[-1]
+      end
+
+      private
+      def load_cache_file()
+        JSON.parse(File.open(@cache_filepath).read)
+      end
+
+      private
+      def save_cache_file(properties)
+        File.open(@cache_filepath, 'w').write(JSON.generate(properties))
       end
     end
   end
