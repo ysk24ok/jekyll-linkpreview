@@ -1,28 +1,50 @@
 # Jekyll::Linkpreview
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/jekyll/linkpreview`. To experiment with that code, run `bin/console` for an interactive prompt.
+Jekyll plugin to generate link preview by `{% linkpreview %}` tag. The plugin fetches [Open Graph protocols](http://ogp.me/) of the designated page to generate preview. The og properties are saved as JSON for caching and it is used when rebuilding the site.
 
-TODO: Delete this and the text above, and describe your gem
+For example, `{% linkpreview https://github.com %}` tag generates following HTML when you run `jekyll build`,
+
+```html
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="https://github.com" target="_blank">https://github.com</a></p>
+  <div class="jekyll-linkpreview-wrapper-inner">
+    <div class="jekyll-linkpreview-content">
+      <div class="jekyll-linkpreview-image">
+        <a href="https://github.com" target="_blank">
+          <img src="https://github.githubassets.com/images/modules/open_graph/github-logo.png" />
+        </a>
+      </div>
+      <div class="jekyll-linkpreview-body">
+        <h2 class="jekyll-linkpreview-title">
+          <a href="https://github.com" target="_blank">Build software better, together</a>
+        </h2>
+        <div class="jekyll-linkpreview-description">GitHub is where people build software. More than 31 million people use GitHub to discover, fork, and contribute to over 100 million projects.</div>
+      </div>
+    </div>
+    <div class="jekyll-linkpreview-footer">
+      <a href="https://github.com" target="_blank">github.com</a>
+    </div>
+  </div>
+</div>
+```
+
+Applying appropriate CSS, the link preview will be like this.
+
+<img width="613" alt="スクリーンショット 2019-04-03 20 52 50" src="https://user-images.githubusercontent.com/3449164/55479970-35baf100-565a-11e9-8c5d-709213917f74.png">
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'jekyll-linkpreview'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install jekyll-linkpreview
+See https://jekyllrb.com/docs/plugins/installation/ .
 
 ## Usage
 
-TODO: Write usage instructions here
+1. Create `_cache` directory in the same hierarchy as `_site` directory.
+
+1. Embed [linkpreview.css](assets/css/linkpreview.css) into your Website.
+
+1. Use `{% linkpreview %}` tag.
+
+1. Run `jekyll build` or `jekyll serve`.
 
 ## Development
 
@@ -32,7 +54,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/jekyll-linkpreview.
+Bug reports and pull requests are welcome on GitHub at https://github.com/ysk24ok/jekyll-linkpreview.
 
 ## License
 
