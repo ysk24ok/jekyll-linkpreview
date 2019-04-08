@@ -38,7 +38,7 @@ See https://jekyllrb.com/docs/plugins/installation/ .
 
 ## Usage
 
-1. Create `_cache` directory in the same hierarchy as `_site` directory.
+1. Create `_cache` directory where you run `jekyll build` or `jekyll serve`.
 
 1. Embed [linkpreview.css](assets/css/linkpreview.css) into your Website.
 
