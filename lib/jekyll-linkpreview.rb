@@ -105,7 +105,7 @@ module Jekyll
         JSON.parse(File.open(@cache_filepath).read)
       end
 
-      private
+      protected
       def save_cache_file(properties)
         File.open(@cache_filepath, 'w').write(JSON.generate(properties))
       end

@@ -17,6 +17,11 @@ end
 
 class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
   attr_reader :markup, :og_properties
+
+  protected
+  def save_cache_file(properties)
+    nil
+  end
 end
 
 RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
@@ -48,7 +53,6 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
           'og:image' => ['https://github.githubassets.com/images/modules/open_graph/github-logo.png'],
           'og:description' => ['GitHub is where people build software.']
         })
-        allow(@tag).to receive(:save_cache_file)
       end
 
       it 'can extract all properties' do
@@ -66,7 +70,6 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         allow(@tag.og_properties).to receive(:fetch).and_return({
           'og:url' => ['http://hoge.org/foo/bar']
         })
-        allow(@tag).to receive(:save_cache_file)
       end
 
       it 'can extract domain' do
@@ -79,7 +82,6 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
     context 'when the page has no og properties' do
       before do
         allow(@tag.og_properties).to receive(:fetch).and_return({})
-        allow(@tag).to receive(:save_cache_file)
       end
 
       it 'has no properties' do
