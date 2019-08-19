@@ -6,11 +6,47 @@ require "jekyll-linkpreview/version"
 
 module Jekyll
   module Linkpreview
+    class OpenGraphProperties
+      def get(url)
+        og_properties = fetch(url)
+        url = get_og_property(og_properties, 'og:url')
+        {
+          'title'       => get_og_property(og_properties, 'og:title'),
+          'url'         => url,
+          'image'       => get_og_property(og_properties, 'og:image'),
+          'description' => get_og_property(og_properties, 'og:description'),
+          'domain'      => extract_domain(url)
+        }
+      end
+
+      private
+      def get_og_property(properties, key)
+        if !properties.key? key then
+          return nil
+        end
+        properties[key][0]
+      end
+
+      private
+      def fetch(url)
+        MetaInspector.new(url).meta_tags['property']
+      end
+
+      private
+      def extract_domain(url)
+        if url.nil? then
+          return nil
+        end
+        url.match(%r{(http|https)://([^/]+).*})[-1]
+      end
+    end
+
     class LinkpreviewTag < Liquid::Tag
       def initialize(tag_name, markup, parse_context)
         super
         @markup = markup.rstrip()
         @cache_filepath = "_cache/%s.json" % Digest::MD5.hexdigest(@markup)
+        @og_properties = OpenGraphProperties.new
       end
 
       def render(context)
@@ -58,39 +94,10 @@ module Jekyll
         if File.exist?(@cache_filepath) then
           return load_cache_file
         else
-          og_properties = fetch_og_properties()
-          url = get_og_property(og_properties, 'og:url')
-          properties = {
-            'title'       => get_og_property(og_properties, 'og:title'),
-            'url'         => url,
-            'image'       => get_og_property(og_properties, 'og:image'),
-            'description' => get_og_property(og_properties, 'og:description'),
-            'domain'      => extract_domain(url)
-          }
+          properties = @og_properties.get(@markup)
           save_cache_file(properties)
           return properties
         end
-      end
-
-      private
-      def fetch_og_properties()
-        MetaInspector.new(@markup).meta_tags['property']
-      end
-
-      private
-      def get_og_property(properties, key)
-        if !properties.key? key then
-          return nil
-        end
-        properties[key][0]
-      end
-
-      private
-      def extract_domain(url)
-        if url.nil? then
-          return nil
-        end
-        url.match(%r{(http|https)://([^/]+).*})[-1]
       end
 
       private
@@ -98,7 +105,7 @@ module Jekyll
         JSON.parse(File.open(@cache_filepath).read)
       end
 
-      private
+      protected
       def save_cache_file(properties)
         File.open(@cache_filepath, 'w').write(JSON.generate(properties))
       end
