@@ -45,12 +45,12 @@ module Jekyll
       def initialize(tag_name, markup, parse_context)
         super
         @markup = markup.rstrip()
-        @cache_filepath = "_cache/%s.json" % Digest::MD5.hexdigest(@markup)
         @og_properties = OpenGraphProperties.new
       end
 
       def render(context)
-        properties = get_properties()
+        url = get_url_from(context)
+        properties = get_properties(url)
         title       = properties['title']
         url         = properties['url']
         image       = properties['image']
@@ -90,24 +90,30 @@ module Jekyll
         html
       end
 
-      def get_properties()
-        if File.exist?(@cache_filepath) then
-          return load_cache_file
+      def get_properties(url)
+        cache_filepath = "_cache/%s.json" % Digest::MD5.hexdigest(url)
+        if File.exist?(cache_filepath) then
+          return load_cache_file(cache_filepath)
         else
-          properties = @og_properties.get(@markup)
-          save_cache_file(properties)
+          properties = @og_properties.get(url)
+          save_cache_file(cache_filepath, properties)
           return properties
         end
       end
 
       private
-      def load_cache_file()
-        JSON.parse(File.open(@cache_filepath).read)
+      def get_url_from(context)
+        context.scopes[0].key?(@markup) ? context.scopes[0][@markup] : @markup
+      end
+
+      private
+      def load_cache_file(filepath)
+        JSON.parse(File.open(filepath).read)
       end
 
       protected
-      def save_cache_file(properties)
-        File.open(@cache_filepath, 'w').write(JSON.generate(properties))
+      def save_cache_file(filepath, properties)
+        File.open(filepath, 'w').write(JSON.generate(properties))
       end
     end
   end
