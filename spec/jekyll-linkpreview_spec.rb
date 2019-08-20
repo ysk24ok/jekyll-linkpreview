@@ -24,6 +24,57 @@ class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
   end
 end
 
+RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
+  describe '#get' do
+    before do
+      @og_properties = Jekyll::Linkpreview::OpenGraphProperties.new
+    end
+
+    describe 'og:image' do
+      context "when the content of 'og:image' tag is an absolute url" do
+        before do
+          allow(@og_properties).to receive(:fetch).and_return({
+            'og:url' => ['https://hoge.org/foo/bar'],
+            'og:image' => ['https://hoge.org/images/favicon.ico']
+          })
+        end
+
+        it 'can extract image url' do
+          properties = @og_properties.get(nil)
+          expect(properties['image']).to eq 'https://hoge.org/images/favicon.ico'
+        end
+      end
+
+      context "when the content of 'og:image' tag is a root-relative url" do
+        before do
+          allow(@og_properties).to receive(:fetch).and_return({
+            'og:url' => ['https://hoge.org/foo/bar'],
+            'og:image' => ['/images/favicon.ico']
+          })
+        end
+
+        it 'can convert a root-relative image url to an absolute one' do
+          properties = @og_properties.get(nil)
+          expect(properties['image']).to eq '//hoge.org/images/favicon.ico'
+        end
+      end
+
+      context "when 'og:image' tag has no content" do
+        before do
+          allow(@og_properties).to receive(:fetch).and_return({
+            'og:url' => ['https://hoge.org/foo/bar']
+          })
+        end
+
+        it 'cannot extract image url' do
+          properties = @og_properties.get(nil)
+          expect(properties['image']).to eq nil
+        end
+      end
+    end
+  end
+end
+
 RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
   describe '#initialize' do
     context "when 'markup' is followed by empty spaces" do
