@@ -9,12 +9,12 @@ module Jekyll
     class OpenGraphProperties
       def get(url)
         og_properties = fetch(url)
-        url = get_og_property(og_properties, 'og:url')
-        domain = extract_domain(url)
+        og_url = get_og_property(og_properties, 'og:url')
+        domain = extract_domain(og_url)
         image_url = get_og_property(og_properties, 'og:image')
         {
           'title'       => get_og_property(og_properties, 'og:title'),
-          'url'         => url,
+          'url'         => og_url,
           'image'       => convert_to_absolute_url(image_url, domain),
           'description' => get_og_property(og_properties, 'og:description'),
           'domain'      => domain
@@ -68,21 +68,20 @@ module Jekyll
         url = get_url_from(context)
         properties = get_properties(url)
         title       = properties['title']
-        url         = properties['url']
         image       = properties['image']
         description = properties['description']
         domain      = properties['domain']
-        if title.nil? || url.nil? || image.nil? then
+        if title.nil? || image.nil? || description.nil? || domain.nil? then
           html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{@markup}" target="_blank">#{@markup}</a></p>
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
 </div>
           EOS
           return html
         end
         html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{@markup}" target="_blank">#{@markup}</a></p>
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
   <div class="jekyll-linkpreview-wrapper-inner">
     <div class="jekyll-linkpreview-content">
       <div class="jekyll-linkpreview-image">
@@ -98,7 +97,7 @@ module Jekyll
       </div>
     </div>
     <div class="jekyll-linkpreview-footer">
-      <a href="#{url}" target="_blank">#{domain}</a>
+      <a href="#{domain}" target="_blank">#{domain}</a>
     </div>
   </div>
 </div>
