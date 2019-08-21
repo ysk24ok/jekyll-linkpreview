@@ -56,6 +56,8 @@ module Jekyll
     end
 
     class LinkpreviewTag < Liquid::Tag
+      @@cache_dir = '_cache'
+
       def initialize(tag_name, markup, parse_context)
         super
         @markup = markup.rstrip()
@@ -105,14 +107,18 @@ module Jekyll
       end
 
       def get_properties(url)
-        cache_filepath = "_cache/%s.json" % Digest::MD5.hexdigest(url)
+        cache_filepath = "#{@@cache_dir}/%s.json" % Digest::MD5.hexdigest(url)
         if File.exist?(cache_filepath) then
           return load_cache_file(cache_filepath)
-        else
-          properties = @og_properties.get(url)
-          save_cache_file(cache_filepath, properties)
-          return properties
         end
+        properties = @og_properties.get(url)
+        if Dir.exists?(@@cache_dir) then
+          save_cache_file(cache_filepath, properties)
+        else
+          # TODO: This message will be shown at all linkprevew tag
+          warn "'#{@@cache_dir}' directory does not exist. Create it for caching."
+        end
+        properties
       end
 
       private
