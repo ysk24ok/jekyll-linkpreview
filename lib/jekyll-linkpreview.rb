@@ -10,12 +10,14 @@ module Jekyll
       def get(url)
         og_properties = fetch(url)
         url = get_og_property(og_properties, 'og:url')
+        domain = extract_domain(url)
+        image_url = get_og_property(og_properties, 'og:image')
         {
           'title'       => get_og_property(og_properties, 'og:title'),
           'url'         => url,
-          'image'       => get_og_property(og_properties, 'og:image'),
+          'image'       => convert_to_absolute_url(image_url, domain),
           'description' => get_og_property(og_properties, 'og:description'),
-          'domain'      => extract_domain(url)
+          'domain'      => domain
         }
       end
 
@@ -30,6 +32,18 @@ module Jekyll
       private
       def fetch(url)
         MetaInspector.new(url).meta_tags['property']
+      end
+
+      private
+      def convert_to_absolute_url(url, domain)
+        if url.nil? then
+          return nil
+        end
+        # root relative url
+        if url[0] == '/' then
+          return "//#{domain}#{url}"
+        end
+        url
       end
 
       private
