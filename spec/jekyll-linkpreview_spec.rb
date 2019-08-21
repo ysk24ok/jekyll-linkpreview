@@ -30,6 +30,48 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
       @og_properties = Jekyll::Linkpreview::OpenGraphProperties.new
     end
 
+    describe 'og:url and domain' do
+      context "when 'og:url' is https" do
+        before do
+          allow(@og_properties).to receive(:fetch).and_return({
+            'og:url' => ['https://hoge.org/foo/bar'],
+          })
+        end
+
+        it 'can extract url and domain' do
+          properties = @og_properties.get(nil)
+          expect(properties['url']).to eq 'https://hoge.org/foo/bar'
+          expect(properties['domain']).to eq 'hoge.org'
+        end
+      end
+
+      context "when 'og:url' is http" do
+        before do
+          allow(@og_properties).to receive(:fetch).and_return({
+            'og:url' => ['http://hoge.org/foo/bar'],
+          })
+        end
+
+        it 'can extract url and domain' do
+          properties = @og_properties.get(nil)
+          expect(properties['url']).to eq 'http://hoge.org/foo/bar'
+          expect(properties['domain']).to eq 'hoge.org'
+        end
+      end
+
+      context "when 'og:url' tag has no content" do
+        before do
+          allow(@og_properties).to receive(:fetch).and_return({})
+        end
+
+        it 'cannot extract url and domain' do
+          properties = @og_properties.get(nil)
+          expect(properties['url']).to eq nil
+          expect(properties['domain']).to eq nil
+        end
+      end
+    end
+
     describe 'og:image' do
       context "when the content of 'og:image' tag is an absolute url" do
         before do
@@ -113,20 +155,6 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         expect(properties['image']).to eq 'https://github.githubassets.com/images/modules/open_graph/github-logo.png'
         expect(properties['description']).to eq 'GitHub is where people build software.'
         expect(properties['domain']).to eq 'github.com'
-      end
-    end
-
-    context "when 'og:url' is http" do
-      before do
-        allow(@tag.og_properties).to receive(:fetch).and_return({
-          'og:url' => ['http://hoge.org/foo/bar']
-        })
-      end
-
-      it 'can extract domain' do
-        properties = @tag.get_properties('https://github.com')
-        expect(properties['url']).to eq 'http://hoge.org/foo/bar'
-        expect(properties['domain']).to eq 'hoge.org'
       end
     end
 
