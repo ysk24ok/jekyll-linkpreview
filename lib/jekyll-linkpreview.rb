@@ -71,7 +71,7 @@ module Jekyll
         image       = properties['image']
         description = properties['description']
         domain      = properties['domain']
-        if title.nil? || image.nil? || description.nil? || domain.nil? then
+        if title.nil? || image.nil? || domain.nil? then
           html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
   <p><a href="#{url}" target="_blank">#{url}</a></p>
