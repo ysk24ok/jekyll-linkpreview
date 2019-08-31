@@ -2,7 +2,7 @@
 
 Jekyll plugin to generate link preview by `{% linkpreview %}` tag. The plugin fetches [Open Graph protocols](http://ogp.me/) of the designated page to generate preview. The og properties are saved as JSON for caching and it is used when rebuilding the site.
 
-You can pass url directly to the tag, 
+You can pass url directly to the tag,
 
 ```
 {% linkpreview https://github.com %}
@@ -11,7 +11,7 @@ You can pass url directly to the tag,
 or, can pass a url variable.
 
 ```
-{% assign github_toppage = 'https://github.com'%}
+{% assign github_toppage = 'https://github.com' %}
 {% linkpreview github_toppage %}
 ```
 
@@ -41,9 +41,11 @@ The tag above generates following HTML when you run `jekyll build`,
 </div>
 ```
 
-Applying appropriate CSS, the link preview will be like this.
+By applying appropriate CSS, the link preview will be like this.
 
 <img width="613" alt="スクリーンショット 2019-04-03 20 52 50" src="https://user-images.githubusercontent.com/3449164/55479970-35baf100-565a-11e9-8c5d-709213917f74.png">
+
+The preview will not be generated if the page does not have `og:title`, `og:url` or `og:image` meta tag.
 
 ## Installation
 
