@@ -60,7 +60,7 @@ module Jekyll
 
       def initialize(tag_name, markup, parse_context)
         super
-        @markup = markup.rstrip()
+        @markup = markup.strip()
         @og_properties = OpenGraphProperties.new
       end
 
@@ -71,38 +71,12 @@ module Jekyll
         image       = properties['image']
         description = properties['description']
         domain      = properties['domain']
+
         if title.nil? || image.nil? || domain.nil? then
-          html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-</div>
-          EOS
-          return html
+          render_linkpreview_nog(context, url)
+        else
+          render_linkpreview_og(context, url, title, image, description, domain)
         end
-        html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-  <div class="jekyll-linkpreview-wrapper-inner">
-    <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-image">
-        <a href="#{url}" target="_blank">
-          <img src="#{image}" />
-        </a>
-      </div>
-      <div class="jekyll-linkpreview-body">
-        <h2 class="jekyll-linkpreview-title">
-          <a href="#{url}" target="_blank">#{title}</a>
-        </h2>
-        <div class="jekyll-linkpreview-description">#{description}</div>
-      </div>
-    </div>
-    <div class="jekyll-linkpreview-footer">
-      <a href="//#{domain}" target="_blank">#{domain}</a>
-    </div>
-  </div>
-</div>
-        EOS
-        html
       end
 
       def get_properties(url)
@@ -122,7 +96,7 @@ module Jekyll
 
       private
       def get_url_from(context)
-        context.scopes[0].key?(@markup) ? context.scopes[0][@markup] : @markup
+        context[@markup]
       end
 
       private
@@ -132,7 +106,69 @@ module Jekyll
 
       protected
       def save_cache_file(filepath, properties)
-        File.open(filepath, 'w').write(JSON.generate(properties))
+        File.open(filepath, 'w') { |f| f.write JSON.generate(properties) }
+      end
+
+      private
+      def render_linkpreview_og(context, url, title, image, description, domain)
+        template_path = get_linkpreview_og_template()
+        if File.exist?(template_path)
+          template_file = File.read template_path
+          site = context.registers[:site]
+          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_image" => image, "link_description" => description, "link_domain" => domain})
+        else
+          html = <<-EOS
+          <div class="jekyll-linkpreview-wrapper">
+          <p><a href="#{url}" target="_blank">#{url}</a></p>
+          <div class="jekyll-linkpreview-wrapper-inner">
+          <div class="jekyll-linkpreview-content">
+          <div class="jekyll-linkpreview-image">
+          <a href="#{url}" target="_blank">
+            <img src="#{image}" />
+          </a>
+          </div>
+          <div class="jekyll-linkpreview-body">
+          <h2 class="jekyll-linkpreview-title">
+            <a href="#{url}" target="_blank">#{title}</a>
+          </h2>
+          <div class="jekyll-linkpreview-description">#{description}</div>
+          </div>
+          </div>
+          <div class="jekyll-linkpreview-footer">
+          <a href="//#{domain}" target="_blank">#{domain}</a>
+          </div>
+          </div>
+          </div>
+          EOS
+          html
+        end
+      end
+
+      private
+      def render_linkpreview_nog(context, url)
+        template_path = get_linkpreview_nog_template()
+        if File.exist?(template_path)
+          template_file = File.read template_path
+          site = context.registers[:site]
+          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url})
+        else
+          html = <<-EOS
+          <div class="jekyll-linkpreview-wrapper">
+          <p><a href="#{url}" target="_blank">#{url}</a></p>
+          </div>
+          EOS
+          html
+        end
+      end
+
+      private
+      def get_linkpreview_og_template()
+        File.join Dir.pwd, "_includes", "linkpreview.html"
+      end
+
+      private
+      def get_linkpreview_nog_template()
+        File.join Dir.pwd, "_includes", "linkpreview_nog.html"
       end
     end
   end

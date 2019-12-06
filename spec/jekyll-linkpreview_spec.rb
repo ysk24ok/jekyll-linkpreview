@@ -189,7 +189,7 @@ RSpec.describe "Integration test" do
   context "when URL is directly passed to the tag" do
     it "can generate link preview" do
       t = Liquid::Template.new
-      t.parse("{% test_linkpreview https://github.com %}")
+      t.parse('{% test_linkpreview "https://github.com" %}')
       expect(t.render).not_to include('Liquid error: internal')
     end
   end
