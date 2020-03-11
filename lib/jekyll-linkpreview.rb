@@ -118,28 +118,28 @@ module Jekyll
           template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_image" => image, "link_description" => description, "link_domain" => domain})
         else
           html = <<-EOS
-          <div class="jekyll-linkpreview-wrapper">
-          <p><a href="#{url}" target="_blank">#{url}</a></p>
-          <div class="jekyll-linkpreview-wrapper-inner">
-          <div class="jekyll-linkpreview-content">
-          <div class="jekyll-linkpreview-image">
-          <a href="#{url}" target="_blank">
-            <img src="#{image}" />
-          </a>
-          </div>
-          <div class="jekyll-linkpreview-body">
-          <h2 class="jekyll-linkpreview-title">
-            <a href="#{url}" target="_blank">#{title}</a>
-          </h2>
-          <div class="jekyll-linkpreview-description">#{description}</div>
-          </div>
-          </div>
-          <div class="jekyll-linkpreview-footer">
-          <a href="//#{domain}" target="_blank">#{domain}</a>
-          </div>
-          </div>
-          </div>
-          EOS
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
+  <div class="jekyll-linkpreview-wrapper-inner">
+    <div class="jekyll-linkpreview-content">
+      <div class="jekyll-linkpreview-image">
+        <a href="#{url}" target="_blank">
+          <img src="#{image}" />
+        </a>
+      </div>
+      <div class="jekyll-linkpreview-body">
+        <h2 class="jekyll-linkpreview-title">
+          <a href="#{url}" target="_blank">#{title}</a>
+        </h2>
+        <div class="jekyll-linkpreview-description">#{description}</div>
+      </div>
+    </div>
+    <div class="jekyll-linkpreview-footer">
+      <a href="//#{domain}" target="_blank">#{domain}</a>
+    </div>
+  </div>
+</div>
+EOS
           html
         end
       end
@@ -153,9 +153,9 @@ module Jekyll
           template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url})
         else
           html = <<-EOS
-          <div class="jekyll-linkpreview-wrapper">
-          <p><a href="#{url}" target="_blank">#{url}</a></p>
-          </div>
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
+</div>
           EOS
           html
         end
