@@ -85,6 +85,20 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
+      context "when 'og:url' tag has ill-formed URL" do
+        before do
+          allow(@og_properties).to receive(:fetch).and_return({
+            'og:url' => ['ill-formed']
+          })
+        end
+
+        it 'cannot extract url and domain' do
+          properties = @og_properties.get(nil)
+          expect(properties['url']).to eq 'ill-formed'
+          expect(properties['domain']).to eq nil
+        end
+      end
+
       context "when 'og:url' tag has no content" do
         before do
           allow(@og_properties).to receive(:fetch).and_return({})
