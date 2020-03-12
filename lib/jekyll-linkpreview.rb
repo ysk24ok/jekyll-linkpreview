@@ -51,7 +51,11 @@ module Jekyll
         if url.nil? then
           return nil
         end
-        url.match(%r{(http|https)://([^/]+).*})[-1]
+        m = url.match(%r{(http|https)://([^/]+).*})
+        if m.nil? then
+          return nil
+        end
+        m[-1]
       end
     end
 
