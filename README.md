@@ -1,6 +1,8 @@
 # Jekyll::Linkpreview
 
-Jekyll plugin to generate link preview by `{% linkpreview %}` tag. The plugin fetches [Open Graph Protocol](http://ogp.me/) metadata of the designated page to generate preview. The og properties are saved as JSON for caching and it is used when rebuilding the site.
+[![Build Status](https://travis-ci.org/ysk24ok/jekyll-linkpreview.svg?branch=master)](https://travis-ci.org/ysk24ok/jekyll-linkpreview)
+
+Jekyll plugin to generate link preview by `{% linkpreview %}` tag. The plugin fetches [Open Graph protocol](http://ogp.me/) metadata of the designated page to generate preview. The og properties are saved as JSON for caching and it is used when rebuilding the site.
 
 You can pass url directly to the tag,
 
@@ -15,7 +17,7 @@ or, can pass a url variable.
 {% linkpreview github_toppage %}
 ```
 
-The tag above generates following HTML when you run `jekyll build`,
+The tag above generates following HTML when you run `jekyll build`.
 
 ```html
 <div class="jekyll-linkpreview-wrapper">
@@ -45,7 +47,15 @@ By applying appropriate CSS, the link preview will be like this.
 
 <img width="613" alt="スクリーンショット 2019-04-03 20 52 50" src="https://user-images.githubusercontent.com/3449164/55479970-35baf100-565a-11e9-8c5d-709213917f74.png">
 
-The preview will not be generated if the page does not have `og:title`, `og:url` or `og:image` meta tag.
+When the page does not have Open Graph protocol metadata, following simple HTML will be generated.
+
+```html
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="https://example.com" target="_blank">https://example.com</a></p>
+</div>
+```
+
+You can override the default templates, see [Custom templates](#user-content-custom-templates).
 
 ## Installation
 
@@ -53,7 +63,7 @@ See https://jekyllrb.com/docs/plugins/installation/ .
 
 ## Usage
 
-1. Create `_cache` directory where you run `jekyll build` or `jekyll serve`.
+1. Create `_cache` directory.
 
 1. Embed [linkpreview.css](assets/css/linkpreview.css) into your Website.
 
@@ -62,13 +72,11 @@ See https://jekyllrb.com/docs/plugins/installation/ .
 1. Run `jekyll build` or `jekyll serve`.
 
 
-## Preview templates
+## Custom templates
 
-You can override the default templates used for generating previews, both in case Open Graph Protocol metadata exists or does not exist for a given page.
+You can override the default templates used for generating previews, both in case Open Graph protocol metadata exists or does not exist for a given page.
 
-### Open Graph Protocol preview template
-
-Template used for generating previews for pages where Open Graph Protocol metadata **exists**.
+### Template for pages where Open Graph protocol metadata exists
 
  1. Place `linkpreview.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview.html`)
 
@@ -79,9 +87,7 @@ Template used for generating previews for pages where Open Graph Protocol metada
   * **link_description** i.e. `{{ link_description }}`
   * **link_domain** i.e. `{{ link_domain }}`
 
-### No Open Graph Protocol preview template
-
-Template used for generating previews for pages where Open Graph Protocol metadata **does not exist**.
+### Template for pages where Open Graph protocol metadata does not exist
 
 1. Place `linkpreview_nog.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview_nog.html`)
 
