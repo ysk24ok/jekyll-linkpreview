@@ -4,4 +4,13 @@ language: ruby
 cache: bundler
 rvm:
   - 2.4.2
+  - 2.7.0
 before_install: gem install bundler -v 2.0.1
+gemfile:
+  - gemfiles/jekyll_3.gemfile
+  - gemfiles/jekyll_4.gemfile
+script: "bundle exec rake test"
+matrix:
+  exclude:
+    - rvm: 2.4.2
+      gemfile: gemfiles/jekyll_4.gemfile
