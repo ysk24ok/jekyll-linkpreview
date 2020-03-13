@@ -51,7 +51,11 @@ module Jekyll
         if url.nil? then
           return nil
         end
-        url.match(%r{(http|https)://([^/]+).*})[-1]
+        m = url.match(%r{(http|https)://([^/]+).*})
+        if m.nil? then
+          return nil
+        end
+        m[-1]
       end
     end
 
@@ -60,7 +64,7 @@ module Jekyll
 
       def initialize(tag_name, markup, parse_context)
         super
-        @markup = markup.rstrip()
+        @markup = markup.strip()
         @og_properties = OpenGraphProperties.new
       end
 
@@ -71,15 +75,53 @@ module Jekyll
         image       = properties['image']
         description = properties['description']
         domain      = properties['domain']
+
         if title.nil? || image.nil? || domain.nil? then
-          html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-</div>
-          EOS
-          return html
+          render_linkpreview_nog(context, url)
+        else
+          render_linkpreview_og(context, url, title, image, description, domain)
         end
-        html = <<-EOS
+      end
+
+      def get_properties(url)
+        cache_filepath = "#{@@cache_dir}/%s.json" % Digest::MD5.hexdigest(url)
+        if File.exist?(cache_filepath) then
+          return load_cache_file(cache_filepath)
+        end
+        properties = @og_properties.get(url)
+        if Dir.exists?(@@cache_dir) then
+          save_cache_file(cache_filepath, properties)
+        else
+          # TODO: This message will be shown at all linkprevew tag
+          warn "'#{@@cache_dir}' directory does not exist. Create it for caching."
+        end
+        properties
+      end
+
+      private
+      def get_url_from(context)
+        context[@markup]
+      end
+
+      private
+      def load_cache_file(filepath)
+        JSON.parse(File.open(filepath).read)
+      end
+
+      protected
+      def save_cache_file(filepath, properties)
+        File.open(filepath, 'w') { |f| f.write JSON.generate(properties) }
+      end
+
+      private
+      def render_linkpreview_og(context, url, title, image, description, domain)
+        template_path = get_linkpreview_og_template()
+        if File.exist?(template_path)
+          template_file = File.read template_path
+          site = context.registers[:site]
+          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_image" => image, "link_description" => description, "link_domain" => domain})
+        else
+          html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
   <p><a href="#{url}" target="_blank">#{url}</a></p>
   <div class="jekyll-linkpreview-wrapper-inner">
@@ -101,38 +143,36 @@ module Jekyll
     </div>
   </div>
 </div>
-        EOS
-        html
+EOS
+          html
+        end
       end
 
-      def get_properties(url)
-        cache_filepath = "#{@@cache_dir}/%s.json" % Digest::MD5.hexdigest(url)
-        if File.exist?(cache_filepath) then
-          return load_cache_file(cache_filepath)
-        end
-        properties = @og_properties.get(url)
-        if Dir.exists?(@@cache_dir) then
-          save_cache_file(cache_filepath, properties)
+      private
+      def render_linkpreview_nog(context, url)
+        template_path = get_linkpreview_nog_template()
+        if File.exist?(template_path)
+          template_file = File.read template_path
+          site = context.registers[:site]
+          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url})
         else
-          # TODO: This message will be shown at all linkprevew tag
-          warn "'#{@@cache_dir}' directory does not exist. Create it for caching."
+          html = <<-EOS
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
+</div>
+          EOS
+          html
         end
-        properties
       end
 
       private
-      def get_url_from(context)
-        context.scopes[0].key?(@markup) ? context.scopes[0][@markup] : @markup
+      def get_linkpreview_og_template()
+        File.join Dir.pwd, "_includes", "linkpreview.html"
       end
 
       private
-      def load_cache_file(filepath)
-        JSON.parse(File.open(filepath).read)
-      end
-
-      protected
-      def save_cache_file(filepath, properties)
-        File.open(filepath, 'w').write(JSON.generate(properties))
+      def get_linkpreview_nog_template()
+        File.join Dir.pwd, "_includes", "linkpreview_nog.html"
       end
     end
   end
