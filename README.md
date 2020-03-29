@@ -1,5 +1,6 @@
 # Jekyll::Linkpreview
 
+
 [![Build Status](https://travis-ci.org/ysk24ok/jekyll-linkpreview.svg?branch=master)](https://travis-ci.org/ysk24ok/jekyll-linkpreview)
 
 Jekyll plugin to generate link preview by `{% linkpreview %}` tag. The plugin fetches [Open Graph protocol](http://ogp.me/) metadata of the designated page to generate preview. The og properties are saved as JSON for caching and it is used when rebuilding the site.
