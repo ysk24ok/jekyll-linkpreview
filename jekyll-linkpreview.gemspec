@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "jekyll", ">= 3.5", "< 4.1"
+  spec.add_dependency "jekyll", ">= 3.5"
   spec.add_dependency "metainspector", "~> 5.9"
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "rake", "~> 12.3.3"
