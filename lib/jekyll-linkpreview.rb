@@ -184,7 +184,7 @@ EOS
   <p><a href="#{url}" target="_blank">#{url}</a></p>
   <div class="jekyll-linkpreview-wrapper-inner">
     <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-body">
+      <div class="jekyll-linkpreview-body-nog">
         <h2 class="jekyll-linkpreview-title">
           <a href="#{url}" target="_blank">#{title}</a>
         </h2>
