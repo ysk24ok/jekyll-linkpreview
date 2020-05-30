@@ -172,7 +172,7 @@ EOS
       end
 
       private
-      def render_linkpreview_nog(context, url)
+      def render_linkpreview_nog(context, url, title, description, domain)
         template_path = get_linkpreview_nog_template()
         if File.exist?(template_path)
           template_file = File.read template_path
