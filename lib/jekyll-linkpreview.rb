@@ -9,16 +9,16 @@ module Jekyll
   module Linkpreview
     class OpenGraphProperties
       def get(url)
-        og_properties = fetch(url)
+        page = fetch(url)
+        og_properties = page.meta_tags['property']
         og_url = get_og_property(og_properties, 'og:url')
-        domain = extract_domain(og_url)
         image_url = get_og_property(og_properties, 'og:image')
         {
           'title'       => get_og_property(og_properties, 'og:title'),
           'url'         => og_url,
-          'image'       => convert_to_absolute_url(image_url, domain),
+          'image'       => convert_to_absolute_url(image_url, page.root_url),
           'description' => get_og_property(og_properties, 'og:description'),
-          'domain'      => domain
+          'domain'      => page.root_url
         }
       end
 
@@ -32,7 +32,7 @@ module Jekyll
 
       private
       def fetch(url)
-        MetaInspector.new(url).meta_tags['property']
+        MetaInspector.new(url)
       end
 
       private
@@ -45,18 +45,6 @@ module Jekyll
           return URI.join(domain, url).to_s
         end
         url
-      end
-
-      private
-      def extract_domain(url)
-        if url.nil? then
-          return nil
-        end
-        m = url.match(%r{(http|https)://([^/]+).*})
-        if m.nil? then
-          return nil
-        end
-        m[-1]
       end
     end
 
