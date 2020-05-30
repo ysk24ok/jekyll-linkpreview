@@ -59,6 +59,23 @@ module Jekyll
       end
     end
 
+    class NonOpenGraphProperties
+      def get(url)
+        nog_properties = fetch(url)
+        {
+          'title'       => nog_properties.title,
+          'url'         => nog_properties.url,
+          'description' => nog_properties.parsed.xpath("//p").first,
+          'domain'      => nog_properties.root_url
+        }
+      end
+
+      private
+      def fetch(url)
+        MetaInspector.new(url)
+      end
+    end
+
     class LinkpreviewTag < Liquid::Tag
       @@cache_dir = '_cache'
 
@@ -66,6 +83,7 @@ module Jekyll
         super
         @markup = markup.strip()
         @og_properties = OpenGraphProperties.new
+        @nog_properties = NonOpenGraphProperties.new
       end
 
       def render(context)
@@ -76,8 +94,8 @@ module Jekyll
         description = properties['description']
         domain      = properties['domain']
 
-        if title.nil? || image.nil? || domain.nil? then
-          render_linkpreview_nog(context, url)
+        if image.nil? then
+          render_linkpreview_nog(context, url, title, description, domain)
         else
           render_linkpreview_og(context, url, title, image, description, domain)
         end
@@ -88,7 +106,12 @@ module Jekyll
         if File.exist?(cache_filepath) then
           return load_cache_file(cache_filepath)
         end
-        properties = @og_properties.get(url)
+        meta = MetaInspector.new(url).meta_tags['property']
+        if meta? 'og:title' then
+          properties = @og_properties.get(url)
+        else
+          properties = @nog_properties.get(url)
+        end
         if Dir.exists?(@@cache_dir) then
           save_cache_file(cache_filepath, properties)
         else
@@ -154,13 +177,26 @@ EOS
         if File.exist?(template_path)
           template_file = File.read template_path
           site = context.registers[:site]
-          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url})
+          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_description" => description, "link_domain" => domain})
         else
           html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
   <p><a href="#{url}" target="_blank">#{url}</a></p>
+  <div class="jekyll-linkpreview-wrapper-inner">
+    <div class="jekyll-linkpreview-content">
+      <div class="jekyll-linkpreview-body">
+        <h2 class="jekyll-linkpreview-title">
+          <a href="#{url}" target="_blank">#{title}</a>
+        </h2>
+        <div class="jekyll-linkpreview-description">#{description}</div>
+      </div>
+    </div>
+    <div class="jekyll-linkpreview-footer">
+      <a href="//#{domain}" target="_blank">#{domain}</a>
+    </div>
+  </div>
 </div>
-          EOS
+EOS
           html
         end
       end

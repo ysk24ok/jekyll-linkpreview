@@ -91,7 +91,11 @@ You can override the default templates used for generating previews, both in cas
 
 1. Place `linkpreview_nog.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview_nog.html`)
 
-2. Use built-in **link_url** variable to render URL data, i.e. `{{ link_url }}`
+ 2. Use built-in variables to extract data which you would like to render. Available variables are:
+  * **link_url** i.e. `{{ link_url }}`
+  * **link_title** i.e. `{{ link_title }}`
+  * **link_description** i.e. `{{ link_description }}`
+  * **link_domain** i.e. `{{ link_domain }}`
 
 ## Development
 
