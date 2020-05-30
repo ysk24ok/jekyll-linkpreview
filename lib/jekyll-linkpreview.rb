@@ -65,7 +65,7 @@ module Jekyll
         {
           'title'       => nog_properties.title,
           'url'         => nog_properties.url,
-          'description' => nog_properties.parsed.xpath("//p").first,
+          'description' => nog_properties.parsed.xpath("//p").first.children.to_s,
           'domain'      => nog_properties.root_url
         }
       end
@@ -107,7 +107,7 @@ module Jekyll
           return load_cache_file(cache_filepath)
         end
         meta = MetaInspector.new(url).meta_tags['property']
-        if meta? 'og:title' then
+        if meta.has_key?('og:title') then
           properties = @og_properties.get(url)
         else
           properties = @nog_properties.get(url)
