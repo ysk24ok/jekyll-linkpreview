@@ -65,7 +65,7 @@ module Jekyll
         {
           'title'       => nog_properties.title,
           'url'         => nog_properties.url,
-          'description' => nog_properties.parsed.search('p').map(&:text).first,
+          'description' => nog_properties.parsed.xpath('//p').map(&:text).first[0..180] + "...",
           'domain'      => nog_properties.root_url
         }
       end
