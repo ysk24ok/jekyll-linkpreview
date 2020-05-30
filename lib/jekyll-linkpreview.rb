@@ -61,18 +61,27 @@ module Jekyll
 
     class NonOpenGraphProperties
       def get(url)
-        nog_properties = fetch(url)
+        page = fetch(url)
         {
-          'title'       => nog_properties.title,
-          'url'         => nog_properties.url,
-          'description' => nog_properties.parsed.xpath('//p').map(&:text).first[0..180] + "...",
-          'domain'      => nog_properties.root_url
+          'title'       => page.title,
+          'url'         => page.url,
+          'description' => get_description(page),
+          'domain'      => page.root_url
         }
       end
 
       private
       def fetch(url)
         MetaInspector.new(url)
+      end
+
+      private
+      def get_description(page)
+        if page.parsed?.xpath('//p[normalize-space()]')? != nil then
+          page.parsed.xpath('//p[normalize-space()]').map(&:text).first[0..180] + "..."
+        else
+          "..."
+        end
       end
     end
 
