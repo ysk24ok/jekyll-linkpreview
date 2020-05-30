@@ -7,10 +7,16 @@ rvm:
   - 2.7.0
 before_install: gem install bundler -v 2.0.1
 gemfile:
-  - gemfiles/jekyll_3.gemfile
-  - gemfiles/jekyll_4.gemfile
+  - gemfiles/jekyll_35.gemfile
+  - gemfiles/jekyll_36.gemfile
+  - gemfiles/jekyll_37.gemfile
+  - gemfiles/jekyll_38.gemfile
+  - gemfiles/jekyll_40.gemfile
+  - gemfiles/jekyll_41.gemfile
 script: "bundle exec rake test"
 matrix:
   exclude:
     - rvm: 2.4.2
-      gemfile: gemfiles/jekyll_4.gemfile
+      gemfile: gemfiles/jekyll_40.gemfile
+    - rvm: 2.4.2
+      gemfile: gemfiles/jekyll_41.gemfile
