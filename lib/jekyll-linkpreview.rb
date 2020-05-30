@@ -1,5 +1,6 @@
 require "digest"
 require "json"
+require 'uri'
 
 require "metainspector"
 require "jekyll-linkpreview/version"
@@ -41,7 +42,7 @@ module Jekyll
         end
         # root relative url
         if url[0] == '/' then
-          return "//#{domain}#{url}"
+          return URI.join(domain, url).to_s
         end
         url
       end
@@ -78,9 +79,9 @@ module Jekyll
       private
       def get_description(page)
         if !page.parsed.xpath('//p[normalize-space()]').empty? then
-          page.parsed.xpath('//p[normalize-space()]').map(&:text).first[0..180] + "..."
+          return page.parsed.xpath('//p[normalize-space()]').map(&:text).first[0..180] + "..."
         else
-          "..."
+          return "..."
         end
       end
     end
