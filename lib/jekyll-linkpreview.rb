@@ -77,7 +77,7 @@ module Jekyll
 
       private
       def get_description(page)
-        if page.parsed?.xpath('//p[normalize-space()]')? != nil then
+        if !page.parsed.xpath('//p[normalize-space()]').empty? then
           page.parsed.xpath('//p[normalize-space()]').map(&:text).first[0..180] + "..."
         else
           "..."
