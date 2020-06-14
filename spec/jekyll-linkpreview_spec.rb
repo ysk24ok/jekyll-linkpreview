@@ -1,6 +1,6 @@
 require 'jekyll'
 require 'rspec/mocks/standalone'
-#require_relative '../lib/jekyll/linkpreview'
+# require_relative '../lib/jekyll-linkpreview'
 require 'jekyll-linkpreview'
 
 RSpec.describe 'Liquid::Template' do
@@ -16,7 +16,7 @@ RSpec.describe 'Jekyll::Linkpreview' do
 end
 
 class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
-  attr_reader :markup, :og_properties
+  attr_reader :markup, :og_properties, :nog_properties
 
   protected
   def save_cache_file(filepath, properties)
@@ -204,6 +204,14 @@ RSpec.describe "Integration test" do
     it "can generate link preview" do
       t = Liquid::Template.new
       t.parse('{% test_linkpreview "https://github.com" %}')
+      expect(t.render).not_to include('Liquid error: internal')
+    end
+  end
+
+  context "when URL has no OpenGraph tags" do
+    it "can generate link preview" do
+      t = Liquid::Template.new
+      t.parse('{% test_linkpreview "https://connect2id.com/products/nimbus-jose-jwt/vulnerabilities" %}')
       expect(t.render).not_to include('Liquid error: internal')
     end
   end
