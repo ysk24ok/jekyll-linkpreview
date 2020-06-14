@@ -12,3 +12,5 @@
 
 # Appraisal
 *.gemfile.lock
+Gemfile.lock
+vendor/
