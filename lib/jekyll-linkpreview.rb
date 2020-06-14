@@ -74,6 +74,23 @@ module Jekyll
       end
     end
 
+    class NonOpenGraphProperties
+      def get(url)
+        nog_properties = fetch(url)
+        {
+          'title'       => nog_properties.title,
+          'url'         => nog_properties.url,
+          'description' => nog_properties.parsed.xpath("//p").first,
+          'domain'      => nog_properties.root_url
+        }
+      end
+
+      private
+      def fetch(url)
+        MetaInspector.new(url)
+      end
+    end
+
     class LinkpreviewTag < Liquid::Tag
       @@cache_dir = '_cache'
 
@@ -182,7 +199,7 @@ EOS
   <p><a href="#{url}" target="_blank">#{url}</a></p>
   <div class="jekyll-linkpreview-wrapper-inner">
     <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-body-nog">
+      <div class="jekyll-linkpreview-body">
         <h2 class="jekyll-linkpreview-title">
           <a href="#{url}" target="_blank">#{title}</a>
         </h2>
