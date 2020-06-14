@@ -18,7 +18,7 @@ module Jekyll
           'url'         => og_url,
           'image'       => convert_to_absolute_url(image_url, page.root_url),
           'description' => get_og_property(og_properties, 'og:description'),
-          'domain'      => page.root_url
+          'domain'      => page.host
         }
       end
 
@@ -27,7 +27,7 @@ module Jekyll
         if !properties.key? key then
           return nil
         end
-        properties[key][0]
+        properties[key].first
       end
 
       private
@@ -81,7 +81,7 @@ module Jekyll
           'title'       => nog_properties.title,
           'url'         => nog_properties.url,
           'description' => nog_properties.parsed.xpath("//p").first,
-          'domain'      => nog_properties.root_url
+          'domain'      => nog_properties.host
         }
       end
 
