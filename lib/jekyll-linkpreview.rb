@@ -92,7 +92,7 @@ module Jekyll
         description = properties['description']
         domain      = properties['domain']
 
-        if image.nil? then
+        if !image then
           render_linkpreview_nog(context, url, title, description, domain)
         else
           render_linkpreview_og(context, url, title, image, description, domain)
@@ -105,10 +105,10 @@ module Jekyll
           return load_cache_file(cache_filepath)
         end
         meta = MetaInspector.new(url).meta_tags['property']
-        if meta.has_key?('og:title') then
-          properties = @og_properties.get(url)
-        else
+        if meta.empty? then
           properties = @nog_properties.get(url)
+        else
+          properties = @og_properties.get(url)
         end
         if Dir.exists?(@@cache_dir) then
           save_cache_file(cache_filepath, properties)
@@ -160,7 +160,7 @@ module Jekyll
       </div>
     </div>
     <div class="jekyll-linkpreview-footer">
-      <a href="//#{domain}" target="_blank">#{domain}</a>
+      <a href="#{domain}" target="_blank">#{domain}</a>
     </div>
   </div>
 </div>
@@ -190,7 +190,7 @@ EOS
       </div>
     </div>
     <div class="jekyll-linkpreview-footer">
-      <a href="//#{domain}" target="_blank">#{domain}</a>
+      <a href="#{domain}" target="_blank">#{domain}</a>
     </div>
   </div>
 </div>
