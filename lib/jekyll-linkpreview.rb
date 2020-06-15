@@ -74,23 +74,6 @@ module Jekyll
       end
     end
 
-    class NonOpenGraphProperties
-      def get(url)
-        nog_properties = fetch(url)
-        {
-          'title'       => nog_properties.title,
-          'url'         => nog_properties.url,
-          'description' => nog_properties.parsed.xpath("//p").first,
-          'domain'      => nog_properties.host
-        }
-      end
-
-      private
-      def fetch(url)
-        MetaInspector.new(url)
-      end
-    end
-
     class LinkpreviewTag < Liquid::Tag
       @@cache_dir = '_cache'
 
