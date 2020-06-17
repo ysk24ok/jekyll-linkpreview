@@ -1,6 +1,6 @@
 require 'jekyll'
 require 'rspec/mocks/standalone'
-#require_relative '../lib/jekyll/linkpreview'
+# require_relative '../lib/jekyll-linkpreview'
 require 'jekyll-linkpreview'
 
 RSpec.describe 'Liquid::Template' do
@@ -16,7 +16,7 @@ RSpec.describe 'Jekyll::Linkpreview' do
 end
 
 class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
-  attr_reader :markup, :og_properties
+  attr_reader :markup, :og_properties, :nog_properties
 
   protected
   def save_cache_file(filepath, properties)
@@ -30,11 +30,11 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
       @og_properties = Jekyll::Linkpreview::OpenGraphProperties.new
     end
 
-    describe 'og:title' do
-      context "when 'og:title' has a content" do
+    describe 'title' do
+      context "when 'title' has a content" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:title' => ['hoge.org - an awesome organization in the world'],
+          allow(@og_properties).to receive(:get).and_return({
+            'title' => 'hoge.org - an awesome organization in the world',
           })
         end
 
@@ -44,9 +44,9 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
-      context "when 'og:title' has no content" do
+      context "when 'title' has no content" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({})
+          allow(@og_properties).to receive(:get).and_return({})
         end
 
         it 'cannot extract title' do
@@ -56,11 +56,12 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
       end
     end
 
-    describe 'og:url and domain' do
-      context "when 'og:url' is https" do
+    describe 'url and domain' do
+      context "when 'url' is https" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:url' => ['https://hoge.org/foo/bar'],
+          allow(@og_properties).to receive(:get).and_return({
+            'url' => 'https://hoge.org/foo/bar',
+            'domain' => 'hoge.org'
           })
         end
 
@@ -71,10 +72,11 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
-      context "when 'og:url' is http" do
+      context "when 'url' is http" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:url' => ['http://hoge.org/foo/bar'],
+          allow(@og_properties).to receive(:get).and_return({
+            'url' => 'http://hoge.org/foo/bar',
+            'domain' => 'hoge.org'
           })
         end
 
@@ -85,10 +87,10 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
-      context "when 'og:url' tag has ill-formed URL" do
+      context "when 'url' tag has ill-formed URL" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:url' => ['ill-formed']
+          allow(@og_properties).to receive(:get).and_return({
+            'url' => 'ill-formed'
           })
         end
 
@@ -99,9 +101,9 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
-      context "when 'og:url' tag has no content" do
+      context "when 'url' tag has no content" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({})
+          allow(@og_properties).to receive(:get).and_return({})
         end
 
         it 'cannot extract url and domain' do
@@ -112,12 +114,12 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
       end
     end
 
-    describe 'og:image' do
-      context "when the content of 'og:image' tag is an absolute url" do
+    describe 'image' do
+      context "when the content of 'image' tag is an absolute url" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:url' => ['https://hoge.org/foo/bar'],
-            'og:image' => ['https://hoge.org/images/favicon.ico']
+          allow(@og_properties).to receive(:get).and_return({
+            'url' => 'https://hoge.org/foo/bar',
+            'image' => 'https://hoge.org/images/favicon.ico'
           })
         end
 
@@ -127,11 +129,11 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
-      context "when the content of 'og:image' tag is a root-relative url" do
+      context "when the content of 'image' tag is a root-relative url" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:url' => ['https://hoge.org/foo/bar'],
-            'og:image' => ['/images/favicon.ico']
+          allow(@og_properties).to receive(:get).and_return({
+            'url' => 'https://hoge.org/foo/bar',
+            'image' => '//hoge.org/images/favicon.ico'
           })
         end
 
@@ -141,10 +143,10 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
-      context "when 'og:image' tag has no content" do
+      context "when 'image' tag has no content" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:url' => ['https://hoge.org/foo/bar']
+          allow(@og_properties).to receive(:get).and_return({
+            'url' => 'https://hoge.org/foo/bar'
           })
         end
 
@@ -155,11 +157,11 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
       end
     end
 
-    describe 'og:description' do
-      context "when 'og:description' has a content" do
+    describe 'description' do
+      context "when 'description' has a content" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({
-            'og:description' => ['An awesome organization in the world for doing hoge'],
+          allow(@og_properties).to receive(:get).and_return({
+            'description' => 'An awesome organization in the world for doing hoge',
           })
         end
 
@@ -169,9 +171,9 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
         end
       end
 
-      context "when 'og:description' has no content" do
+      context "when 'description' has no content" do
         before do
-          allow(@og_properties).to receive(:fetch).and_return({})
+          allow(@og_properties).to receive(:get).and_return({})
         end
 
         it 'cannot extract description' do
@@ -204,6 +206,14 @@ RSpec.describe "Integration test" do
     it "can generate link preview" do
       t = Liquid::Template.new
       t.parse('{% test_linkpreview "https://github.com" %}')
+      expect(t.render).not_to include('Liquid error: internal')
+    end
+  end
+
+  context "when URL has no OpenGraph tags" do
+    it "can generate link preview" do
+      t = Liquid::Template.new
+      t.parse('{% test_linkpreview "https://connect2id.com/products/nimbus-jose-jwt/vulnerabilities" %}')
       expect(t.render).not_to include('Liquid error: internal')
     end
   end

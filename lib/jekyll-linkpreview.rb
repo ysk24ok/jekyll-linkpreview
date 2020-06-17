@@ -1,5 +1,6 @@
 require "digest"
 require "json"
+require 'uri'
 
 require "metainspector"
 require "jekyll-linkpreview/version"
@@ -8,16 +9,16 @@ module Jekyll
   module Linkpreview
     class OpenGraphProperties
       def get(url)
-        og_properties = fetch(url)
+        page = fetch(url)
+        og_properties = page.meta_tags['property']
         og_url = get_og_property(og_properties, 'og:url')
-        domain = extract_domain(og_url)
         image_url = get_og_property(og_properties, 'og:image')
         {
           'title'       => get_og_property(og_properties, 'og:title'),
           'url'         => og_url,
-          'image'       => convert_to_absolute_url(image_url, domain),
+          'image'       => convert_to_absolute_url(image_url, page.root_url),
           'description' => get_og_property(og_properties, 'og:description'),
-          'domain'      => domain
+          'domain'      => page.host
         }
       end
 
@@ -26,12 +27,12 @@ module Jekyll
         if !properties.key? key then
           return nil
         end
-        properties[key][0]
+        properties[key].first
       end
 
       private
       def fetch(url)
-        MetaInspector.new(url).meta_tags['property']
+        MetaInspector.new(url)
       end
 
       private
@@ -41,21 +42,35 @@ module Jekyll
         end
         # root relative url
         if url[0] == '/' then
-          return "//#{domain}#{url}"
+          return URI.join(domain, url).to_s
         end
         url
       end
+    end
+
+    class NonOpenGraphProperties
+      def get(url)
+        page = fetch(url)
+        {
+          'title'       => page.title,
+          'url'         => page.url,
+          'description' => get_description(page),
+          'domain'      => page.root_url
+        }
+      end
 
       private
-      def extract_domain(url)
-        if url.nil? then
-          return nil
+      def fetch(url)
+        MetaInspector.new(url)
+      end
+
+      private
+      def get_description(page)
+        if !page.parsed.xpath('//p[normalize-space()]').empty? then
+          return page.parsed.xpath('//p[normalize-space()]').map(&:text).first[0..180] + "..."
+        else
+          return "..."
         end
-        m = url.match(%r{(http|https)://([^/]+).*})
-        if m.nil? then
-          return nil
-        end
-        m[-1]
       end
     end
 
@@ -66,6 +81,7 @@ module Jekyll
         super
         @markup = markup.strip()
         @og_properties = OpenGraphProperties.new
+        @nog_properties = NonOpenGraphProperties.new
       end
 
       def render(context)
@@ -76,8 +92,8 @@ module Jekyll
         description = properties['description']
         domain      = properties['domain']
 
-        if title.nil? || image.nil? || domain.nil? then
-          render_linkpreview_nog(context, url)
+        if !image then
+          render_linkpreview_nog(context, url, title, description, domain)
         else
           render_linkpreview_og(context, url, title, image, description, domain)
         end
@@ -88,7 +104,12 @@ module Jekyll
         if File.exist?(cache_filepath) then
           return load_cache_file(cache_filepath)
         end
-        properties = @og_properties.get(url)
+        meta = MetaInspector.new(url).meta_tags['property']
+        if meta.empty? then
+          properties = @nog_properties.get(url)
+        else
+          properties = @og_properties.get(url)
+        end
         if Dir.exists?(@@cache_dir) then
           save_cache_file(cache_filepath, properties)
         else
@@ -139,7 +160,7 @@ module Jekyll
       </div>
     </div>
     <div class="jekyll-linkpreview-footer">
-      <a href="//#{domain}" target="_blank">#{domain}</a>
+      <a href="#{domain}" target="_blank">#{domain}</a>
     </div>
   </div>
 </div>
@@ -149,18 +170,31 @@ EOS
       end
 
       private
-      def render_linkpreview_nog(context, url)
+      def render_linkpreview_nog(context, url, title, description, domain)
         template_path = get_linkpreview_nog_template()
         if File.exist?(template_path)
           template_file = File.read template_path
           site = context.registers[:site]
-          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url})
+          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_description" => description, "link_domain" => domain})
         else
           html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
   <p><a href="#{url}" target="_blank">#{url}</a></p>
+  <div class="jekyll-linkpreview-wrapper-inner">
+    <div class="jekyll-linkpreview-content">
+      <div class="jekyll-linkpreview-body">
+        <h2 class="jekyll-linkpreview-title">
+          <a href="#{url}" target="_blank">#{title}</a>
+        </h2>
+        <div class="jekyll-linkpreview-description">#{description}</div>
+      </div>
+    </div>
+    <div class="jekyll-linkpreview-footer">
+      <a href="#{domain}" target="_blank">#{domain}</a>
+    </div>
+  </div>
 </div>
-          EOS
+EOS
           html
         end
       end
