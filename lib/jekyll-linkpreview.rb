@@ -48,6 +48,10 @@ EOS
         html
       end
 
+      def get_custom_template_path()
+        File.join Dir.pwd, "_includes", "linkpreview.html"
+      end
+
       private
       def get_og_property(properties, key)
         if !properties.key? key then
@@ -99,6 +103,10 @@ EOS
 </div>
 EOS
         html
+      end
+
+      def get_custom_template_path()
+        File.join Dir.pwd, "_includes", "linkpreview_nog.html"
       end
 
       private
@@ -178,7 +186,7 @@ EOS
 
       private
       def render_linkpreview_og(context, url, title, image, description, domain)
-        template_path = get_linkpreview_og_template()
+        template_path = @og_properties.get_custom_template_path()
         if File.exist?(template_path)
           template_file = File.read template_path
           site = context.registers[:site]
@@ -190,7 +198,7 @@ EOS
 
       private
       def render_linkpreview_nog(context, url, title, description, domain)
-        template_path = get_linkpreview_nog_template()
+        template_path = @nog_properties.get_custom_template_path()
         if File.exist?(template_path)
           template_file = File.read template_path
           site = context.registers[:site]
@@ -198,16 +206,6 @@ EOS
         else
           @nog_properties.gen_default_template(url, title, description, domain)
         end
-      end
-
-      private
-      def get_linkpreview_og_template()
-        File.join Dir.pwd, "_includes", "linkpreview.html"
-      end
-
-      private
-      def get_linkpreview_nog_template()
-        File.join Dir.pwd, "_includes", "linkpreview_nog.html"
       end
     end
   end
