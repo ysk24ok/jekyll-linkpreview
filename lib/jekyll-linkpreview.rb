@@ -21,6 +21,33 @@ module Jekyll
         }
       end
 
+      def gen_default_template(url, title, image, description, domain)
+        html = <<-EOS
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
+  <div class="jekyll-linkpreview-wrapper-inner">
+    <div class="jekyll-linkpreview-content">
+      <div class="jekyll-linkpreview-image">
+        <a href="#{url}" target="_blank">
+          <img src="#{image}" />
+        </a>
+      </div>
+      <div class="jekyll-linkpreview-body">
+        <h2 class="jekyll-linkpreview-title">
+          <a href="#{url}" target="_blank">#{title}</a>
+        </h2>
+        <div class="jekyll-linkpreview-description">#{description}</div>
+      </div>
+    </div>
+    <div class="jekyll-linkpreview-footer">
+      <a href="#{domain}" target="_blank">#{domain}</a>
+    </div>
+  </div>
+</div>
+EOS
+        html
+      end
+
       private
       def get_og_property(properties, key)
         if !properties.key? key then
@@ -50,6 +77,28 @@ module Jekyll
           'description' => get_description(page),
           'domain'      => page.root_url
         }
+      end
+
+      def gen_default_template(url, title, description, domain)
+        html = <<-EOS
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
+  <div class="jekyll-linkpreview-wrapper-inner">
+    <div class="jekyll-linkpreview-content">
+      <div class="jekyll-linkpreview-body">
+        <h2 class="jekyll-linkpreview-title">
+          <a href="#{url}" target="_blank">#{title}</a>
+        </h2>
+        <div class="jekyll-linkpreview-description">#{description}</div>
+      </div>
+    </div>
+    <div class="jekyll-linkpreview-footer">
+      <a href="#{domain}" target="_blank">#{domain}</a>
+    </div>
+  </div>
+</div>
+EOS
+        html
       end
 
       private
@@ -135,30 +184,7 @@ module Jekyll
           site = context.registers[:site]
           template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_image" => image, "link_description" => description, "link_domain" => domain})
         else
-          html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-  <div class="jekyll-linkpreview-wrapper-inner">
-    <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-image">
-        <a href="#{url}" target="_blank">
-          <img src="#{image}" />
-        </a>
-      </div>
-      <div class="jekyll-linkpreview-body">
-        <h2 class="jekyll-linkpreview-title">
-          <a href="#{url}" target="_blank">#{title}</a>
-        </h2>
-        <div class="jekyll-linkpreview-description">#{description}</div>
-      </div>
-    </div>
-    <div class="jekyll-linkpreview-footer">
-      <a href="#{domain}" target="_blank">#{domain}</a>
-    </div>
-  </div>
-</div>
-EOS
-          html
+          @og_properties.gen_default_template(url, title, image, description, domain)
         end
       end
 
@@ -170,25 +196,7 @@ EOS
           site = context.registers[:site]
           template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_description" => description, "link_domain" => domain})
         else
-          html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-  <div class="jekyll-linkpreview-wrapper-inner">
-    <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-body">
-        <h2 class="jekyll-linkpreview-title">
-          <a href="#{url}" target="_blank">#{title}</a>
-        </h2>
-        <div class="jekyll-linkpreview-description">#{description}</div>
-      </div>
-    </div>
-    <div class="jekyll-linkpreview-footer">
-      <a href="#{domain}" target="_blank">#{domain}</a>
-    </div>
-  </div>
-</div>
-EOS
-          html
+          @nog_properties.gen_default_template(url, title, description, domain)
         end
       end
 
