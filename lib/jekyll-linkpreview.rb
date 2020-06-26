@@ -8,8 +8,7 @@ require "jekyll-linkpreview/version"
 module Jekyll
   module Linkpreview
     class OpenGraphProperties
-      def get(url)
-        page = fetch(url)
+      def get(page)
         og_properties = page.meta_tags['property']
         og_url = get_og_property(og_properties, 'og:url')
         image_url = get_og_property(og_properties, 'og:image')
@@ -31,11 +30,6 @@ module Jekyll
       end
 
       private
-      def fetch(url)
-        MetaInspector.new(url)
-      end
-
-      private
       def convert_to_absolute_url(url, domain)
         if url.nil? then
           return nil
@@ -49,19 +43,13 @@ module Jekyll
     end
 
     class NonOpenGraphProperties
-      def get(url)
-        page = fetch(url)
+      def get(page)
         {
           'title'       => page.title,
           'url'         => page.url,
           'description' => get_description(page),
           'domain'      => page.root_url
         }
-      end
-
-      private
-      def fetch(url)
-        MetaInspector.new(url)
       end
 
       private
@@ -104,11 +92,11 @@ module Jekyll
         if File.exist?(cache_filepath) then
           return load_cache_file(cache_filepath)
         end
-        meta = MetaInspector.new(url).meta_tags['property']
-        if meta.empty? then
-          properties = @nog_properties.get(url)
+        page = fetch(url)
+        if page.meta_tags['property'].empty? then
+          properties = @nog_properties.get(page)
         else
-          properties = @og_properties.get(url)
+          properties = @og_properties.get(page)
         end
         if Dir.exists?(@@cache_dir) then
           save_cache_file(cache_filepath, properties)
@@ -122,6 +110,11 @@ module Jekyll
       private
       def get_url_from(context)
         context[@markup]
+      end
+
+      private
+      def fetch(url)
+        MetaInspector.new(url)
       end
 
       private
