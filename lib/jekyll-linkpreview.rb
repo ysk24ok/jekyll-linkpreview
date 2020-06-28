@@ -21,7 +21,22 @@ module Jekyll
         }
       end
 
-      def gen_default_template(url, title, image, description, domain)
+      def get_properties_for_custom_template(properties)
+        {
+          "link_title" => properties['title'],
+          "link_url" => properties['url'],
+          "link_image" => properties['image'],
+          "link_description" => properties['description'],
+          "link_domain" => properties['domain']
+        }
+      end
+
+      def gen_default_template(properties)
+        title = properties['title'],
+        url = properties['url'],
+        image = properties['image'],
+        description = properties['description'],
+        domain = properties['domain']
         html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
   <p><a href="#{url}" target="_blank">#{url}</a></p>
@@ -83,7 +98,20 @@ EOS
         }
       end
 
-      def gen_default_template(url, title, description, domain)
+      def get_properties_for_custom_template(properties)
+        {
+          "link_title" => properties['title'],
+          "link_url" => properties['url'],
+          "link_description" => properties['description'],
+          "link_domain" => properties['domain']
+        }
+      end
+
+      def gen_default_template(properties)
+        title = properties['title'],
+        url = properties['url'],
+        description = properties['description'],
+        domain = properties['domain']
         html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
   <p><a href="#{url}" target="_blank">#{url}</a></p>
@@ -132,15 +160,11 @@ EOS
       def render(context)
         url = get_url_from(context)
         properties = get_properties(url)
-        title       = properties['title']
-        image       = properties['image']
-        description = properties['description']
-        domain      = properties['domain']
 
-        if !image then
-          render_linkpreview_nog(context, url, title, description, domain)
+        if !properties['image'] then
+          render_linkpreview @nog_properties, context, properties
         else
-          render_linkpreview_og(context, url, title, image, description, domain)
+          render_linkpreview @og_properties, context, properties
         end
       end
 
@@ -185,27 +209,21 @@ EOS
       end
 
       private
-      def render_linkpreview_og(context, url, title, image, description, domain)
-        template_path = @og_properties.get_custom_template_path()
+      def render_linkpreview(ogp, context, properties)
+        template_path = ogp.get_custom_template_path
         if File.exist?(template_path)
-          template_file = File.read template_path
-          site = context.registers[:site]
-          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_image" => image, "link_description" => description, "link_domain" => domain})
+          link_properties = ogp.get_properties_for_custom_template properties
+          gen_custom_template context template_path link_properties
         else
-          @og_properties.gen_default_template(url, title, image, description, domain)
+          ogp.gen_default_template properties
         end
       end
 
       private
-      def render_linkpreview_nog(context, url, title, description, domain)
-        template_path = @nog_properties.get_custom_template_path()
-        if File.exist?(template_path)
-          template_file = File.read template_path
-          site = context.registers[:site]
-          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_description" => description, "link_domain" => domain})
-        else
-          @nog_properties.gen_default_template(url, title, description, domain)
-        end
+      def gen_custom_template(context, template_path, link_properties)
+        template_file = File.read template_path
+        site = context.registers[:site]
+        template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!(link_properties)
       end
     end
   end
