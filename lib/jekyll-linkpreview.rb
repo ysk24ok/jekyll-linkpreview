@@ -31,38 +31,6 @@ module Jekyll
         }
       end
 
-      def gen_default_template(properties)
-        title = properties['title'],
-        url = properties['url'],
-        image = properties['image'],
-        description = properties['description'],
-        domain = properties['domain']
-        html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-  <div class="jekyll-linkpreview-wrapper-inner">
-    <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-image">
-        <a href="#{url}" target="_blank">
-          <img src="#{image}" />
-        </a>
-      </div>
-      <div class="jekyll-linkpreview-body">
-        <h2 class="jekyll-linkpreview-title">
-          <a href="#{url}" target="_blank">#{title}</a>
-        </h2>
-        <div class="jekyll-linkpreview-description">#{description}</div>
-      </div>
-    </div>
-    <div class="jekyll-linkpreview-footer">
-      <a href="#{domain}" target="_blank">#{domain}</a>
-    </div>
-  </div>
-</div>
-EOS
-        html
-      end
-
       def get_custom_template_path()
         File.join Dir.pwd, "_includes", "linkpreview.html"
       end
@@ -105,32 +73,6 @@ EOS
           "link_description" => properties['description'],
           "link_domain" => properties['domain']
         }
-      end
-
-      def gen_default_template(properties)
-        title = properties['title'],
-        url = properties['url'],
-        description = properties['description'],
-        domain = properties['domain']
-        html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-  <div class="jekyll-linkpreview-wrapper-inner">
-    <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-body">
-        <h2 class="jekyll-linkpreview-title">
-          <a href="#{url}" target="_blank">#{title}</a>
-        </h2>
-        <div class="jekyll-linkpreview-description">#{description}</div>
-      </div>
-    </div>
-    <div class="jekyll-linkpreview-footer">
-      <a href="#{domain}" target="_blank">#{domain}</a>
-    </div>
-  </div>
-</div>
-EOS
-        html
       end
 
       def get_custom_template_path()
@@ -215,8 +157,47 @@ EOS
           link_properties = ogp.get_properties_for_custom_template properties
           gen_custom_template context template_path link_properties
         else
-          ogp.gen_default_template properties
+          gen_default_template properties
         end
+      end
+
+      private
+      def gen_default_template(properties)
+        title = properties['title']
+        url = properties['url']
+        description = properties['description']
+        domain = properties['domain']
+        image = properties['image']
+        image_html = ""
+        if image then
+          image_html = <<-EOS
+<div class="jekyll-linkpreview-image">
+  <a href="#{url}" target="_blank">
+    <img src="#{image}" />
+  </a>
+</div>
+EOS
+        end
+        html = <<-EOS
+<div class="jekyll-linkpreview-wrapper">
+  <p><a href="#{url}" target="_blank">#{url}</a></p>
+  <div class="jekyll-linkpreview-wrapper-inner">
+    <div class="jekyll-linkpreview-content">
+#{image_html}
+      <div class="jekyll-linkpreview-body">
+        <h2 class="jekyll-linkpreview-title">
+          <a href="#{url}" target="_blank">#{title}</a>
+        </h2>
+        <div class="jekyll-linkpreview-description">#{description}</div>
+      </div>
+    </div>
+    <div class="jekyll-linkpreview-footer">
+      <a href="#{domain}" target="_blank">#{domain}</a>
+    </div>
+  </div>
+</div>
+EOS
+        html
       end
 
       private
