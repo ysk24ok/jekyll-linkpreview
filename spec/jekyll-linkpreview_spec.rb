@@ -1,4 +1,5 @@
 require 'jekyll'
+require 'metainspector'
 require 'rspec/mocks/standalone'
 # require_relative '../lib/jekyll-linkpreview'
 require 'jekyll-linkpreview'
@@ -16,7 +17,7 @@ RSpec.describe 'Jekyll::Linkpreview' do
 end
 
 class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
-  attr_reader :markup, :og_properties, :nog_properties
+  attr_reader :markup
 
   protected
   def save_cache_file(filepath, properties)
@@ -25,162 +26,478 @@ class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
 end
 
 RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
-  describe '#get' do
-    before do
-      @og_properties = Jekyll::Linkpreview::OpenGraphProperties.new
-    end
+  before do
+    @title = 'awesome.org - an awesome organization in the world'
+    @url = 'https://awesome.org/about'
+    @image = 'https://awesome.org/images/favicon.ico'
+    @description = 'An awesome organization in the world.'
+    @domain = 'awesome.org'
+    @properties = Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
+  end
 
+  describe '#to_hash' do
+    it 'can return hash' do
+      got = @properties.to_hash
+      expect(got['title']).to eq @title
+      expect(got['url']).to eq @url
+      expect(got['image']).to eq @image
+      expect(got['description']).to eq @description
+      expect(got['domain']).to eq @domain
+    end
+  end
+
+  describe '#to_hash_for_custom_template' do
+    it 'can return hash for custom template' do
+      got = @properties.to_hash_for_custom_template
+      expect(got['link_title']).to eq @title
+      expect(got['link_url']).to eq @url
+      expect(got['link_image']).to eq @image
+      expect(got['link_description']).to eq @description
+      expect(got['link_domain']).to eq @domain
+    end
+  end
+end
+
+RSpec.describe 'Jekyll::Linkpreview::NonOpenGraphProperties' do
+  before do
+    @title = 'awesome.org - an awesome organization in the world'
+    @url = 'https://awesome.org/about'
+    @description = 'An awesome organization in the world.'
+    @domain = 'awesome.org'
+    @properties = Jekyll::Linkpreview::NonOpenGraphProperties.new @title, @url, @description, @domain
+  end
+
+  describe '#to_hash' do
+    it 'can return hash' do
+      got = @properties.to_hash
+      expect(got['title']).to eq @title
+      expect(got['url']).to eq @url
+      expect(got['description']).to eq @description
+      expect(got['domain']).to eq @domain
+    end
+  end
+
+  describe '#to_hash_for_custom_template' do
+    it 'can return hash for custom template' do
+      got = @properties.to_hash_for_custom_template
+      expect(got['link_title']).to eq @title
+      expect(got['link_url']).to eq @url
+      expect(got['link_description']).to eq @description
+      expect(got['link_domain']).to eq @domain
+    end
+  end
+end
+
+RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
+  before do
+    @factory = Jekyll::Linkpreview::OpenGraphPropertiesFactory.new
+  end
+
+  describe '#from_page' do
     describe 'title' do
-      context "when 'title' has a content" do
+      context "when 'og:title' tag has a content" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'title' => 'hoge.org - an awesome organization in the world',
-          })
+          @title = 'awesome.org - an awesome organization in the world'
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="#{@title}" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'can extract title' do
-          properties = @og_properties.get(nil)
-          expect(properties['title']).to eq 'hoge.org - an awesome organization in the world'
+          got = @factory.from_page(@page).to_hash
+          expect(got['title']).to eq @title
         end
       end
 
-      context "when 'title' has no content" do
+      context "when 'og:title' tag has an empty content" do
         before do
-          allow(@og_properties).to receive(:get).and_return({})
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'cannot extract title' do
-          properties = @og_properties.get(nil)
-          expect(properties['title']).to eq nil
+          got = @factory.from_page(@page).to_hash
+          expect(got['title']).to eq ''
+        end
+      end
+
+      context "when 'og:title' tag does not exist" do
+        before do
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:url" content="#{url}" />
+  </head>
+</html>
+EOS
+          )
+        end
+
+        it 'cannot extract title' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['title']).to eq nil
         end
       end
     end
 
     describe 'url and domain' do
-      context "when 'url' is https" do
+      context "when 'og:url' tag is https" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'url' => 'https://hoge.org/foo/bar',
-            'domain' => 'hoge.org'
-          })
+          @domain = 'awesome.org'
+          @url = "https://#{@domain}/about"
+          @page = MetaInspector.new(
+            @url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:url" content="#{@url}" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'can extract url and domain' do
-          properties = @og_properties.get(nil)
-          expect(properties['url']).to eq 'https://hoge.org/foo/bar'
-          expect(properties['domain']).to eq 'hoge.org'
+          got = @factory.from_page(@page).to_hash
+          expect(got['url']).to eq @url
+          expect(got['domain']).to eq @domain
         end
       end
 
-      context "when 'url' is http" do
+      context "when 'og:url' tag is http" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'url' => 'http://hoge.org/foo/bar',
-            'domain' => 'hoge.org'
-          })
+          @domain = 'awesome.org'
+          @url = "https://#{@domain}/about"
+          @page = MetaInspector.new(
+            @url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:url" content="#{@url}" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'can extract url and domain' do
-          properties = @og_properties.get(nil)
-          expect(properties['url']).to eq 'http://hoge.org/foo/bar'
-          expect(properties['domain']).to eq 'hoge.org'
+          got = @factory.from_page(@page).to_hash
+          expect(got['url']).to eq @url
+          expect(got['domain']).to eq @domain
         end
       end
 
-      context "when 'url' tag has ill-formed URL" do
+      context "when 'og:url' tag has ill-formed URL" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'url' => 'ill-formed'
-          })
+          @domain = 'awesome.org'
+          url = "https://#{@domain}/about"
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:url" content="ill-formed" />
+  </head>
+</html>
+EOS
+          )
         end
 
-        it 'cannot extract url and domain' do
-          properties = @og_properties.get(nil)
-          expect(properties['url']).to eq 'ill-formed'
-          expect(properties['domain']).to eq nil
+        it 'can extract url and domain' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['url']).to eq 'ill-formed'
+          expect(got['domain']).to eq @domain
         end
       end
 
-      context "when 'url' tag has no content" do
+      context "when 'og:url' tag has an empty content" do
         before do
-          allow(@og_properties).to receive(:get).and_return({})
+          @domain = 'awesome.org'
+          url = "https://#{@domain}/about"
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:url" content="" />
+  </head>
+</html>
+EOS
+          )
         end
 
-        it 'cannot extract url and domain' do
-          properties = @og_properties.get(nil)
-          expect(properties['url']).to eq nil
-          expect(properties['domain']).to eq nil
+        it 'cannot extract url but can extract domain' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['url']).to eq ''
+          expect(got['domain']).to eq @domain
+        end
+      end
+
+      context "when 'og:url' tag does not exist" do
+        before do
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="" />
+  </head>
+</html>
+EOS
+          )
+        end
+
+        it 'cannot extract url but can extract domain' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['url']).to eq nil
+          expect(got['domain']).to eq 'awesome.org'
         end
       end
     end
 
     describe 'image' do
-      context "when the content of 'image' tag is an absolute url" do
+      context "when the content of 'og:image' tag is an absolute url" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'url' => 'https://hoge.org/foo/bar',
-            'image' => 'https://hoge.org/images/favicon.ico'
-          })
+          root_url = 'https://awesome.org/'
+          url = URI.join(root_url, 'about').to_s
+          @image_url = URI.join(root_url, 'images/favicon.ico').to_s
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:image" content="#{@image_url}" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'can extract image url' do
-          properties = @og_properties.get(nil)
-          expect(properties['image']).to eq 'https://hoge.org/images/favicon.ico'
+          got = @factory.from_page(@page).to_hash
+          expect(got['image']).to eq @image_url
         end
       end
 
-      context "when the content of 'image' tag is a root-relative url" do
+      context "when the content of 'og:image' tag is a root-relative url" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'url' => 'https://hoge.org/foo/bar',
-            'image' => '//hoge.org/images/favicon.ico'
-          })
+          @root_url = 'https://awesome.org/'
+          url = URI.join(@root_url, 'about').to_s
+          @image_url = '/images/favicon.ico'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:image" content="#{@image_url}" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'can convert a root-relative image url to an absolute one' do
-          properties = @og_properties.get(nil)
-          expect(properties['image']).to eq '//hoge.org/images/favicon.ico'
+          got = @factory.from_page(@page).to_hash
+          expect(got['image']).to eq URI.join(@root_url, @image_url).to_s
         end
       end
 
-      context "when 'image' tag has no content" do
+      context "when 'og:image' tag has an empty content" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'url' => 'https://hoge.org/foo/bar'
-          })
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:image" content="" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'cannot extract image url' do
-          properties = @og_properties.get(nil)
-          expect(properties['image']).to eq nil
+          got = @factory.from_page(@page).to_hash
+          expect(got['image']).to eq ''
+        end
+      end
+
+      context "when 'og:image' tag does not exist" do
+        before do
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="" />
+  </head>
+</html>
+EOS
+          )
+        end
+
+        it 'cannot extract image url' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['image']).to eq nil
         end
       end
     end
 
     describe 'description' do
-      context "when 'description' has a content" do
+      context "when 'og:description' tag has a content" do
         before do
-          allow(@og_properties).to receive(:get).and_return({
-            'description' => 'An awesome organization in the world for doing hoge',
-          })
+          url = 'https://awesome.org/about'
+          @description = 'An awesome organization in the world.'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:description" content="#{@description}" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'can extract description' do
-          properties = @og_properties.get(nil)
-          expect(properties['description']).to eq 'An awesome organization in the world for doing hoge'
+          got = @factory.from_page(@page).to_hash
+          expect(got['description']).to eq @description
         end
       end
 
-      context "when 'description' has no content" do
+      context "when 'og:description' tag has an empty content" do
         before do
-          allow(@og_properties).to receive(:get).and_return({})
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:description" content="" />
+  </head>
+</html>
+EOS
+          )
         end
 
         it 'cannot extract description' do
-          properties = @og_properties.get(nil)
-          expect(properties['description']).to eq nil
+          got = @factory.from_page(@page).to_hash
+          expect(got['description']).to eq ''
         end
       end
+
+      context "when 'og:description' tag does not exist" do
+        before do
+          url = 'https://awesome.org/about'
+          @page = MetaInspector.new(
+            url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="" />
+  </head>
+</html>
+EOS
+          )
+        end
+
+        it 'cannot extract description' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['description']).to eq nil
+        end
+      end
+    end
+  end
+
+  describe '#from_hash' do
+    before do
+      @hash = {
+        'title' => 'awesome.org - an awesome organization in the world',
+        'url' => 'https://awesome.org/about',
+        'domain' => 'awesome.org',
+        'image' => 'https://awesome.org/images/favicon.ico',
+        'description' => 'An awesome organization in the world.',
+      }
+    end
+
+    it 'can return an instance of OpenGraphProperties' do
+      got = @factory.from_hash(@hash)
+      expect(got.instance_of? Jekyll::Linkpreview::OpenGraphProperties).to eq true
+      expect(got.to_hash).to eq @hash
+    end
+  end
+end
+
+RSpec.describe 'Jekyll::Linkpreview::NonOpenGraphPropertiesFactory' do
+  before do
+    @factory = Jekyll::Linkpreview::NonOpenGraphPropertiesFactory.new
+  end
+
+  describe '#from_page' do
+    before do
+      @title = 'awesome.org - an awesome organization in the world'
+      @domain = 'awesome.org'
+      @url = "https://#{@domain}/about"
+      @page = MetaInspector.new(
+        @url,
+        :document => <<-EOS
+<html>
+  <head>
+    <title>#{@title}</title>
+  </head>
+  <body></body>
+</html>
+EOS
+      )
+    end
+
+    it 'can return an instance of NonOpenGraphProperties' do
+      got = @factory.from_page(@page).to_hash
+      expect(got['title']).to eq @title
+      expect(got['url']).to eq @url
+      expect(got['description']).to eq '...'
+      expect(got['domain']).to eq @domain
+    end
+  end
+
+  describe '#from_hash' do
+    before do
+      @hash = {
+        'title' => 'awesome.org - an awesome organization in the world',
+        'url' => 'https://awesome.org/about',
+        'domain' => 'awesome.org',
+        'description' => 'An awesome organization in the world.',
+      }
+    end
+
+    it 'can return an instance of NonOpenGraphProperties' do
+      got = @factory.from_hash(@hash)
+      expect(got.instance_of? Jekyll::Linkpreview::NonOpenGraphProperties).to eq true
+      expect(got.to_hash).to eq @hash
     end
   end
 end

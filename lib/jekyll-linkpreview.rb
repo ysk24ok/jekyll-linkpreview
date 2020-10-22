@@ -8,31 +8,54 @@ require "jekyll-linkpreview/version"
 module Jekyll
   module Linkpreview
     class OpenGraphProperties
-      def get(page)
-        og_properties = page.meta_tags['property']
-        og_url = get_og_property(og_properties, 'og:url')
-        image_url = get_og_property(og_properties, 'og:image')
+      def initialize(title, url, image, description, domain)
+        @title = title
+        @url = url
+        @image = image
+        @description = description
+        @domain = domain
+      end
+
+      def to_hash()
         {
-          'title'       => get_og_property(og_properties, 'og:title'),
-          'url'         => og_url,
-          'image'       => convert_to_absolute_url(image_url, page.root_url),
-          'description' => get_og_property(og_properties, 'og:description'),
-          'domain'      => page.host
+          'title' => @title,
+          'url' => @url,
+          'image' => @image,
+          'description' => @description,
+          'domain' => @domain,
         }
       end
 
-      def get_properties_for_custom_template(properties)
+      def to_hash_for_custom_template()
         {
-          "link_title" => properties['title'],
-          "link_url" => properties['url'],
-          "link_image" => properties['image'],
-          "link_description" => properties['description'],
-          "link_domain" => properties['domain']
+          'link_title' => @title,
+          'link_url' => @url,
+          'link_image' => @image,
+          'link_description' => @description,
+          'link_domain' => @domain
         }
       end
 
       def get_custom_template_path()
         File.join Dir.pwd, "_includes", "linkpreview.html"
+      end
+    end
+
+    class OpenGraphPropertiesFactory
+      def from_page(page)
+        og_properties = page.meta_tags['property']
+        image_url = get_og_property(og_properties, 'og:image')
+        title = get_og_property(og_properties, 'og:title')
+        url = get_og_property(og_properties, 'og:url')
+        image = convert_to_absolute_url(image_url, page.root_url)
+        description = get_og_property(og_properties, 'og:description')
+        domain = page.host
+        OpenGraphProperties.new(title, url, image, description, domain)
+      end
+
+      def from_hash(hash)
+        OpenGraphProperties.new(
+          hash['title'], hash['url'], hash['image'], hash['description'], hash['domain'])
       end
 
       private
@@ -57,26 +80,45 @@ module Jekyll
     end
 
     class NonOpenGraphProperties
-      def get(page)
+      def initialize(title, url, description, domain)
+        @title = title
+        @url = url
+        @description = description
+        @domain = domain
+      end
+
+      def to_hash()
         {
-          'title'       => page.title,
-          'url'         => page.url,
-          'description' => get_description(page),
-          'domain'      => page.root_url
+          'title' => @title,
+          'url' => @url,
+          'description' => @description,
+          'domain' => @domain,
         }
       end
 
-      def get_properties_for_custom_template(properties)
+      def to_hash_for_custom_template()
         {
-          "link_title" => properties['title'],
-          "link_url" => properties['url'],
-          "link_description" => properties['description'],
-          "link_domain" => properties['domain']
+          'link_title' => @title,
+          'link_url' => @url,
+          'link_description' => @description,
+          'link_domain' => @domain
         }
       end
 
       def get_custom_template_path()
         File.join Dir.pwd, "_includes", "linkpreview_nog.html"
+      end
+    end
+
+    class NonOpenGraphPropertiesFactory
+      def from_page(page)
+        NonOpenGraphProperties.new(
+          page.title, page.url, get_description(page), page.host)
+      end
+
+      def from_hash(hash)
+        NonOpenGraphProperties.new(
+          hash['title'], hash['url'], hash['description'], hash['domain'])
       end
 
       private
@@ -95,32 +137,22 @@ module Jekyll
       def initialize(tag_name, markup, parse_context)
         super
         @markup = markup.strip()
-        @og_properties = OpenGraphProperties.new
-        @nog_properties = NonOpenGraphProperties.new
       end
 
       def render(context)
         url = get_url_from(context)
         properties = get_properties(url)
-
-        if !properties['image'] then
-          render_linkpreview @nog_properties, context, properties
-        else
-          render_linkpreview @og_properties, context, properties
-        end
+        render_linkpreview context, properties
       end
 
       def get_properties(url)
         cache_filepath = "#{@@cache_dir}/%s.json" % Digest::MD5.hexdigest(url)
         if File.exist?(cache_filepath) then
-          return load_cache_file(cache_filepath)
+          hash = load_cache_file(cache_filepath)
+          return create_properties_from_hash(hash)
         end
         page = fetch(url)
-        if page.meta_tags['property'].empty? then
-          properties = @nog_properties.get(page)
-        else
-          properties = @og_properties.get(page)
-        end
+        properties = create_properties_from_page(page)
         if Dir.exists?(@@cache_dir) then
           save_cache_file(cache_filepath, properties)
         else
@@ -147,27 +179,47 @@ module Jekyll
 
       protected
       def save_cache_file(filepath, properties)
-        File.open(filepath, 'w') { |f| f.write JSON.generate(properties) }
+        File.open(filepath, 'w') { |f| f.write JSON.generate(properties.to_hash) }
       end
 
       private
-      def render_linkpreview(ogp, context, properties)
-        template_path = ogp.get_custom_template_path
-        if File.exist?(template_path)
-          link_properties = ogp.get_properties_for_custom_template properties
-          gen_custom_template context template_path link_properties
+      def create_properties_from_page(page)
+        if page.meta_tags['property'].empty? then
+          factory = NonOpenGraphPropertiesFactory.new
         else
-          gen_default_template properties
+          factory = OpenGraphPropertiesFactory.new
+        end
+        factory.from_page(page)
+      end
+
+      private
+      def create_properties_from_hash(hash)
+        if hash['image'] then
+          factory = OpenGraphPropertiesFactory.new
+        else
+          factory = NonOpenGraphPropertiesFactory.new
+        end
+        factory.from_hash(hash)
+      end
+
+      private
+      def render_linkpreview(context, properties)
+        template_path = properties.get_custom_template_path
+        if File.exist?(template_path)
+          hash = properties.to_hash_for_custom_template
+          gen_custom_template context, template_path, hash
+        else
+          gen_default_template properties.to_hash
         end
       end
 
       private
-      def gen_default_template(properties)
-        title = properties['title']
-        url = properties['url']
-        description = properties['description']
-        domain = properties['domain']
-        image = properties['image']
+      def gen_default_template(hash)
+        title = hash['title']
+        url = hash['url']
+        description = hash['description']
+        domain = hash['domain']
+        image = hash['image']
         image_html = ""
         if image then
           image_html = <<-EOS
@@ -201,10 +253,10 @@ EOS
       end
 
       private
-      def gen_custom_template(context, template_path, link_properties)
+      def gen_custom_template(context, template_path, hash)
         template_file = File.read template_path
         site = context.registers[:site]
-        template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!(link_properties)
+        template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!(hash)
       end
     end
   end
