@@ -8,6 +8,8 @@ require "jekyll-linkpreview/version"
 module Jekyll
   module Linkpreview
     class OpenGraphProperties
+      @@template_file = 'linkpreview.html'
+
       def initialize(title, url, image, description, domain)
         @title = title
         @url = url
@@ -36,8 +38,8 @@ module Jekyll
         }
       end
 
-      def get_custom_template_path()
-        File.join Dir.pwd, "_includes", "linkpreview.html"
+      def template_file()
+        @@template_file
       end
     end
 
@@ -80,6 +82,8 @@ module Jekyll
     end
 
     class NonOpenGraphProperties
+      @@template_file = 'linkpreview_nog.html'
+
       def initialize(title, url, description, domain)
         @title = title
         @url = url
@@ -105,8 +109,8 @@ module Jekyll
         }
       end
 
-      def get_custom_template_path()
-        File.join Dir.pwd, "_includes", "linkpreview_nog.html"
+      def template_file()
+        @@template_file
       end
     end
 
@@ -133,6 +137,7 @@ module Jekyll
 
     class LinkpreviewTag < Liquid::Tag
       @@cache_dir = '_cache'
+      @@template_dir = '_includes'
 
       def initialize(tag_name, markup, parse_context)
         super
@@ -142,7 +147,7 @@ module Jekyll
       def render(context)
         url = get_url_from(context)
         properties = get_properties(url)
-        render_linkpreview context, properties
+        render_linkpreview properties
       end
 
       def get_properties(url)
@@ -203,14 +208,19 @@ module Jekyll
       end
 
       private
-      def render_linkpreview(context, properties)
-        template_path = properties.get_custom_template_path
+      def render_linkpreview(properties)
+        template_path = get_custom_template_path properties
         if File.exist?(template_path)
           hash = properties.to_hash_for_custom_template
-          gen_custom_template context, template_path, hash
+          gen_custom_template template_path, hash
         else
           gen_default_template properties.to_hash
         end
+      end
+
+      private
+      def get_custom_template_path(properties)
+        File.join Dir.pwd, @@template_dir, properties.template_file
       end
 
       private
@@ -253,10 +263,9 @@ EOS
       end
 
       private
-      def gen_custom_template(context, template_path, hash)
-        template_file = File.read template_path
-        site = context.registers[:site]
-        template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!(hash)
+      def gen_custom_template(template_path, hash)
+        template = File.read template_path
+        Liquid::Template.parse(template).render!(hash)
       end
     end
   end

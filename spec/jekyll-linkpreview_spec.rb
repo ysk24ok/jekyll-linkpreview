@@ -2,6 +2,7 @@ require 'fileutils'
 
 require 'jekyll'
 require 'metainspector'
+require 'nokogiri'
 require 'rspec/mocks/standalone'
 # require_relative '../lib/jekyll-linkpreview'
 require 'jekyll-linkpreview'
@@ -23,6 +24,10 @@ class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
 
   def cache_dir
     @@cache_dir
+  end
+
+  def template_dir
+    @@template_dir
   end
 end
 
@@ -512,6 +517,164 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         parse_context = Liquid::ParseContext.new
         tag = TestLinkpreviewTag.parse(nil, markup, tokenizer, parse_context)
         expect(tag.markup).to eq 'https://github.com'
+      end
+    end
+  end
+
+  describe '#render' do
+    before do
+      @title = 'awesome.org - an awesome organization in the world'
+      @domain = 'awesome.org'
+      @url = "https://#{@domain}/about"
+      @image = "https://#{@domain}/images/favicon.ico"
+      @description = 'An awesome organization in the world.'
+      tokenizer = Liquid::Tokenizer.new('')
+      parse_context = Liquid::ParseContext.new
+      @tag = TestLinkpreviewTag.parse(nil, @url, tokenizer, parse_context)
+
+      Dir.mkdir @tag.template_dir
+    end
+
+    after do
+      FileUtils.rm_r(@tag.template_dir)
+    end
+
+    def check_default_template_with_image_is_rendered(html)
+      doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
+      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]/a/img').attribute('src').value).to eq @image
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
+    end
+
+    def check_default_template_without_image_is_rendered(html)
+      doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
+      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]')).to be_empty
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
+    end
+
+    describe 'custom template for OpenGraphProperties' do
+      before do
+        allow(@tag).to receive(:get_properties).and_return(
+          Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
+        )
+      end
+
+      context 'when a custom template file for OpenGraphProperties exists' do
+        before do
+          @filepath = File.join(@tag.template_dir, 'linkpreview.html')
+          File.open(@filepath, 'w') { |f| f.write <<-EOS
+<div>
+  <p class="title">{{ link_title }}</p>
+  <p class="url">{{ link_url }}</p>
+  <p class="domain">{{ link_domain }}</p>
+  <p class="image">{{ link_image }}</p>
+  <p class="description">{{ link_description }}</p>
+</dic>
+EOS
+          }
+        end
+
+        it 'can render custom template' do
+          html = @tag.render Liquid::Context.new
+          doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+          expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
+          expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
+          expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
+          expect(doc.xpath('//p[@class="image"]').inner_text).to eq @image
+          expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
+        end
+      end
+
+      context 'when a custom template file for NonOpenGraphProperties exists' do
+        before do
+          @filepath = File.join(@tag.template_dir, 'linkpreview_nog.html')
+          File.open(@filepath, 'w') { |f| f.write <<-EOS
+<div>
+  <p class="title">{{ link_title }}</p>
+  <p class="url">{{ link_url }}</p>
+  <p class="domain">{{ link_domain }}</p>
+  <p class="description">{{ link_description }}</p>
+</dic>
+EOS
+          }
+        end
+
+        it 'cannot render custom template' do
+          html = @tag.render Liquid::Context.new
+          check_default_template_with_image_is_rendered html
+        end
+      end
+
+      context 'when no custom template file exists' do
+        it 'cannot render custom template' do
+          html = @tag.render Liquid::Context.new
+          check_default_template_with_image_is_rendered html
+        end
+      end
+    end
+
+    describe 'custom template for NonOpenGraphProperties' do
+      before do
+        allow(@tag).to receive(:get_properties).and_return(
+          Jekyll::Linkpreview::NonOpenGraphProperties.new @title, @url, @description, @domain
+        )
+      end
+
+      context 'when a custom template file for NonOpenGraphProperties exists' do
+        before do
+          @filepath = File.join(@tag.template_dir, 'linkpreview_nog.html')
+          File.open(@filepath, 'w') { |f| f.write <<-EOS
+<div>
+  <p class="title">{{ link_title }}</p>
+  <p class="url">{{ link_url }}</p>
+  <p class="domain">{{ link_domain }}</p>
+  <p class="description">{{ link_description }}</p>
+</dic>
+EOS
+          }
+        end
+
+        it 'can render custom template' do
+          html = @tag.render Liquid::Context.new
+          doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+          expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
+          expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
+          expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
+          expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
+        end
+      end
+
+      context 'when a custom template file for OpenGraphProperties exists' do
+        before do
+          @filepath = File.join(@tag.template_dir, 'linkpreview.html')
+          File.open(@filepath, 'w') { |f| f.write <<-EOS
+<div>
+  <p class="title">{{ link_title }}</p>
+  <p class="url">{{ link_url }}</p>
+  <p class="domain">{{ link_domain }}</p>
+  <p class="image">{{ link_image }}</p>
+  <p class="description">{{ link_description }}</p>
+</dic>
+EOS
+          }
+        end
+
+        it 'cannot render custom template' do
+          html = @tag.render Liquid::Context.new
+          check_default_template_without_image_is_rendered html
+        end
+      end
+
+      context 'when no custom template file exists' do
+        it 'cannot render custom template' do
+          html = @tag.render Liquid::Context.new
+          check_default_template_without_image_is_rendered html
+        end
       end
     end
   end
