@@ -1,3 +1,5 @@
+require 'fileutils'
+
 require 'jekyll'
 require 'metainspector'
 require 'rspec/mocks/standalone'
@@ -19,9 +21,8 @@ end
 class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
   attr_reader :markup
 
-  protected
-  def save_cache_file(filepath, properties)
-    nil
+  def cache_dir
+    @@cache_dir
   end
 end
 
@@ -511,6 +512,62 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         parse_context = Liquid::ParseContext.new
         tag = TestLinkpreviewTag.parse(nil, markup, tokenizer, parse_context)
         expect(tag.markup).to eq 'https://github.com'
+      end
+    end
+  end
+
+  describe '#get_properties' do
+    before do
+      @title = 'awesome.org - an awesome organization in the world'
+      @domain = 'awesome.org'
+      @url = "https://#{@domain}/about"
+      @image = "https://#{@domain}/images/favicon.ico"
+      @description = 'An awesome organization in the world.'
+      tokenizer = Liquid::Tokenizer.new('')
+      parse_context = Liquid::ParseContext.new
+      @tag = TestLinkpreviewTag.parse(nil, @url, tokenizer, parse_context)
+    end
+
+    context 'when a cache file does not exist' do
+      before do
+        allow(@tag).to receive(:fetch).and_return(
+          MetaInspector.new(
+            @url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="#{@title}" />
+    <meta property="og:url" content="#{@url}" />
+    <meta property="og:image" content="#{@image}" />
+    <meta property="og:description" content="#{@description}" />
+  </head>
+</html>
+EOS
+          )
+        )
+        Dir.mkdir @tag.cache_dir
+      end
+
+      after do
+        FileUtils.rm_r(@tag.cache_dir)
+      end
+
+      it 'can save properties to a cache file and load it on the next call' do
+        expect(@tag).to receive(:fetch).exactly(1).times
+
+        got = @tag.get_properties(@url).to_hash
+        expect(got['title']).to eq @title
+        expect(got['url']).to eq @url
+        expect(got['domain']).to eq @domain
+        expect(got['image']).to eq @image
+        expect(got['description']).to eq @description
+
+        got = @tag.get_properties(@url).to_hash
+        expect(got['title']).to eq @title
+        expect(got['url']).to eq @url
+        expect(got['domain']).to eq @domain
+        expect(got['image']).to eq @image
+        expect(got['description']).to eq @description
       end
     end
   end
