@@ -7,53 +7,23 @@ Jekyll plugin to generate link preview by `{% linkpreview %}` tag. The plugin fe
 You can pass url directly to the tag,
 
 ```
-{% linkpreview "https://github.com" %}
+{% linkpreview "https://github.com/ysk24ok/jekyll-linkpreview" %}
 ```
 
 or, can pass a url variable.
 
 ```
-{% assign github_toppage = 'https://github.com' %}
-{% linkpreview github_toppage %}
+{% assign jekyll_linkpreview_page = "https://github.com/ysk24ok/jekyll-linkpreview" %}
+{% linkpreview jekyll_linkpreview_page %}
 ```
 
-The tag above generates following HTML when you run `jekyll build`.
+By applying [linkpreview.css](assets/css/linkpreview.css), the link preview will be like this.
 
-```html
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="https://github.com" target="_blank">https://github.com</a></p>
-  <div class="jekyll-linkpreview-wrapper-inner">
-    <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-image">
-        <a href="https://github.com" target="_blank">
-          <img src="https://github.githubassets.com/images/modules/open_graph/github-logo.png" />
-        </a>
-      </div>
-      <div class="jekyll-linkpreview-body">
-        <h2 class="jekyll-linkpreview-title">
-          <a href="https://github.com" target="_blank">Build software better, together</a>
-        </h2>
-        <div class="jekyll-linkpreview-description">GitHub is where people build software. More than 31 million people use GitHub to discover, fork, and contribute to over 100 million projects.</div>
-      </div>
-    </div>
-    <div class="jekyll-linkpreview-footer">
-      <a href="https://github.com" target="_blank">github.com</a>
-    </div>
-  </div>
-</div>
-```
+<img width="613" alt="スクリーンショット 2020-10-26 19 10 26" src="https://user-images.githubusercontent.com/3449164/97160548-db472f80-17bf-11eb-9cc2-383a076fb14d.png">
 
-By applying appropriate CSS, the link preview will be like this.
+When the page does not have Open Graph protocol metadata, the preview will be like this.
 
-<img width="613" alt="スクリーンショット 2019-04-03 20 52 50" src="https://user-images.githubusercontent.com/3449164/55479970-35baf100-565a-11e9-8c5d-709213917f74.png">
-
-When the page does not have Open Graph protocol metadata, following simple HTML will be generated.
-
-```html
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="https://example.com" target="_blank">https://example.com</a></p>
-</div>
-```
+<img width="613" alt="スクリーンショット 2020-10-26 19 10 35" src="https://user-images.githubusercontent.com/3449164/97160564-e00be380-17bf-11eb-8adb-55c2a07520f1.png">
 
 You can override the default templates, see [Custom templates](#user-content-custom-templates).
 
