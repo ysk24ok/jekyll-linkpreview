@@ -103,6 +103,39 @@ After checking out the repo, run `bin/setup` to install dependencies. Then, run 
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
+### Test with Jekyll site
+
+First, build a Docker image and run a container.
+
+```console
+$ docker build --no-cache -t jekyll_linkpreview_dev .
+$ docker run --rm -it -w /jekyll-linkpreview -p 4000:4000 jekyll_linkpreview_dev /bin/bash
+```
+
+Create a new Jekyll site and move into the new directory.
+
+```console
+# bundle exec jekyll new testsite && cd testsite
+```
+
+Add this line to `:jekyll_plugins` group of Gemfile.
+
+```console
+gem "jekyll-linkpreview", git: "https://github.com/YOUR_ACCOUNT/jekyll-linkpreview", branch: "YOUR_BRANCH"
+```
+
+Install the dependecies to your new site.
+
+```console
+# bundle install
+```
+
+Add a tag such as `{% linkpreview "https://github.com/ysk24ok/jekyll-linkpreview" %}` to `index.markdown` , then start a Jekyll server.
+
+```console
+# bundle exec jekyll serve --host 0.0.0.0
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/ysk24ok/jekyll-linkpreview.
