@@ -8,18 +8,56 @@ require "jekyll-linkpreview/version"
 module Jekyll
   module Linkpreview
     class OpenGraphProperties
-      def get(url)
-        page = fetch(url)
-        og_properties = page.meta_tags['property']
-        og_url = get_og_property(og_properties, 'og:url')
-        image_url = get_og_property(og_properties, 'og:image')
+      @@template_file = 'linkpreview.html'
+
+      def initialize(title, url, image, description, domain)
+        @title = title
+        @url = url
+        @image = image
+        @description = description
+        @domain = domain
+      end
+
+      def to_hash()
         {
-          'title'       => get_og_property(og_properties, 'og:title'),
-          'url'         => og_url,
-          'image'       => convert_to_absolute_url(image_url, page.root_url),
-          'description' => get_og_property(og_properties, 'og:description'),
-          'domain'      => page.host
+          'title' => @title,
+          'url' => @url,
+          'image' => @image,
+          'description' => @description,
+          'domain' => @domain,
         }
+      end
+
+      def to_hash_for_custom_template()
+        {
+          'link_title' => @title,
+          'link_url' => @url,
+          'link_image' => @image,
+          'link_description' => @description,
+          'link_domain' => @domain
+        }
+      end
+
+      def template_file()
+        @@template_file
+      end
+    end
+
+    class OpenGraphPropertiesFactory
+      def from_page(page)
+        og_properties = page.meta_tags['property']
+        image_url = get_og_property(og_properties, 'og:image')
+        title = get_og_property(og_properties, 'og:title')
+        url = get_og_property(og_properties, 'og:url')
+        image = convert_to_absolute_url(image_url, page.root_url)
+        description = get_og_property(og_properties, 'og:description')
+        domain = page.host
+        OpenGraphProperties.new(title, url, image, description, domain)
+      end
+
+      def from_hash(hash)
+        OpenGraphProperties.new(
+          hash['title'], hash['url'], hash['image'], hash['description'], hash['domain'])
       end
 
       private
@@ -28,11 +66,6 @@ module Jekyll
           return nil
         end
         properties[key].first
-      end
-
-      private
-      def fetch(url)
-        MetaInspector.new(url)
       end
 
       private
@@ -49,19 +82,47 @@ module Jekyll
     end
 
     class NonOpenGraphProperties
-      def get(url)
-        page = fetch(url)
+      @@template_file = 'linkpreview_nog.html'
+
+      def initialize(title, url, description, domain)
+        @title = title
+        @url = url
+        @description = description
+        @domain = domain
+      end
+
+      def to_hash()
         {
-          'title'       => page.title,
-          'url'         => page.url,
-          'description' => get_description(page),
-          'domain'      => page.root_url
+          'title' => @title,
+          'url' => @url,
+          'description' => @description,
+          'domain' => @domain,
         }
       end
 
-      private
-      def fetch(url)
-        MetaInspector.new(url)
+      def to_hash_for_custom_template()
+        {
+          'link_title' => @title,
+          'link_url' => @url,
+          'link_description' => @description,
+          'link_domain' => @domain
+        }
+      end
+
+      def template_file()
+        @@template_file
+      end
+    end
+
+    class NonOpenGraphPropertiesFactory
+      def from_page(page)
+        NonOpenGraphProperties.new(
+          page.title, page.url, get_description(page), page.host)
+      end
+
+      def from_hash(hash)
+        NonOpenGraphProperties.new(
+          hash['title'], hash['url'], hash['description'], hash['domain'])
       end
 
       private
@@ -76,40 +137,27 @@ module Jekyll
 
     class LinkpreviewTag < Liquid::Tag
       @@cache_dir = '_cache'
+      @@template_dir = '_includes'
 
       def initialize(tag_name, markup, parse_context)
         super
         @markup = markup.strip()
-        @og_properties = OpenGraphProperties.new
-        @nog_properties = NonOpenGraphProperties.new
       end
 
       def render(context)
         url = get_url_from(context)
         properties = get_properties(url)
-        title       = properties['title']
-        image       = properties['image']
-        description = properties['description']
-        domain      = properties['domain']
-
-        if !image then
-          render_linkpreview_nog(context, url, title, description, domain)
-        else
-          render_linkpreview_og(context, url, title, image, description, domain)
-        end
+        render_linkpreview properties
       end
 
       def get_properties(url)
         cache_filepath = "#{@@cache_dir}/%s.json" % Digest::MD5.hexdigest(url)
         if File.exist?(cache_filepath) then
-          return load_cache_file(cache_filepath)
+          hash = load_cache_file(cache_filepath)
+          return create_properties_from_hash(hash)
         end
-        meta = MetaInspector.new(url).meta_tags['property']
-        if meta.empty? then
-          properties = @nog_properties.get(url)
-        else
-          properties = @og_properties.get(url)
-        end
+        page = fetch(url)
+        properties = create_properties_from_page(page)
         if Dir.exists?(@@cache_dir) then
           save_cache_file(cache_filepath, properties)
         else
@@ -125,33 +173,79 @@ module Jekyll
       end
 
       private
+      def fetch(url)
+        MetaInspector.new(url)
+      end
+
+      private
       def load_cache_file(filepath)
         JSON.parse(File.open(filepath).read)
       end
 
       protected
       def save_cache_file(filepath, properties)
-        File.open(filepath, 'w') { |f| f.write JSON.generate(properties) }
+        File.open(filepath, 'w') { |f| f.write JSON.generate(properties.to_hash) }
       end
 
       private
-      def render_linkpreview_og(context, url, title, image, description, domain)
-        template_path = get_linkpreview_og_template()
-        if File.exist?(template_path)
-          template_file = File.read template_path
-          site = context.registers[:site]
-          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_image" => image, "link_description" => description, "link_domain" => domain})
+      def create_properties_from_page(page)
+        if page.meta_tags['property'].empty? then
+          factory = NonOpenGraphPropertiesFactory.new
         else
-          html = <<-EOS
+          factory = OpenGraphPropertiesFactory.new
+        end
+        factory.from_page(page)
+      end
+
+      private
+      def create_properties_from_hash(hash)
+        if hash['image'] then
+          factory = OpenGraphPropertiesFactory.new
+        else
+          factory = NonOpenGraphPropertiesFactory.new
+        end
+        factory.from_hash(hash)
+      end
+
+      private
+      def render_linkpreview(properties)
+        template_path = get_custom_template_path properties
+        if File.exist?(template_path)
+          hash = properties.to_hash_for_custom_template
+          gen_custom_template template_path, hash
+        else
+          gen_default_template properties.to_hash
+        end
+      end
+
+      private
+      def get_custom_template_path(properties)
+        File.join Dir.pwd, @@template_dir, properties.template_file
+      end
+
+      private
+      def gen_default_template(hash)
+        title = hash['title']
+        url = hash['url']
+        description = hash['description']
+        domain = hash['domain']
+        image = hash['image']
+        image_html = ""
+        if image then
+          image_html = <<-EOS
+<div class="jekyll-linkpreview-image">
+  <a href="#{url}" target="_blank">
+    <img src="#{image}" />
+  </a>
+</div>
+EOS
+        end
+        html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
   <p><a href="#{url}" target="_blank">#{url}</a></p>
   <div class="jekyll-linkpreview-wrapper-inner">
     <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-image">
-        <a href="#{url}" target="_blank">
-          <img src="#{image}" />
-        </a>
-      </div>
+#{image_html}
       <div class="jekyll-linkpreview-body">
         <h2 class="jekyll-linkpreview-title">
           <a href="#{url}" target="_blank">#{title}</a>
@@ -165,48 +259,13 @@ module Jekyll
   </div>
 </div>
 EOS
-          html
-        end
+        html
       end
 
       private
-      def render_linkpreview_nog(context, url, title, description, domain)
-        template_path = get_linkpreview_nog_template()
-        if File.exist?(template_path)
-          template_file = File.read template_path
-          site = context.registers[:site]
-          template_file = (Liquid::Template.parse template_file).render site.site_payload.merge!({"link_url" => url, "link_title" => title, "link_description" => description, "link_domain" => domain})
-        else
-          html = <<-EOS
-<div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
-  <div class="jekyll-linkpreview-wrapper-inner">
-    <div class="jekyll-linkpreview-content">
-      <div class="jekyll-linkpreview-body">
-        <h2 class="jekyll-linkpreview-title">
-          <a href="#{url}" target="_blank">#{title}</a>
-        </h2>
-        <div class="jekyll-linkpreview-description">#{description}</div>
-      </div>
-    </div>
-    <div class="jekyll-linkpreview-footer">
-      <a href="#{domain}" target="_blank">#{domain}</a>
-    </div>
-  </div>
-</div>
-EOS
-          html
-        end
-      end
-
-      private
-      def get_linkpreview_og_template()
-        File.join Dir.pwd, "_includes", "linkpreview.html"
-      end
-
-      private
-      def get_linkpreview_nog_template()
-        File.join Dir.pwd, "_includes", "linkpreview_nog.html"
+      def gen_custom_template(template_path, hash)
+        template = File.read template_path
+        Liquid::Template.parse(template).render!(hash)
       end
     end
   end
