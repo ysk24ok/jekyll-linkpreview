@@ -544,6 +544,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
       expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
       expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
       expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').attribute('href').value).to eq "//#{@domain}"
       expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]/a/img').attribute('src').value).to eq @image
       expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
     end
@@ -553,6 +554,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
       expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
       expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
       expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
+      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').attribute('href').value).to eq "//#{@domain}"
       expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]')).to be_empty
       expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
     end

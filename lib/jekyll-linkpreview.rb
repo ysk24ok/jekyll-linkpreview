@@ -254,7 +254,7 @@ EOS
       </div>
     </div>
     <div class="jekyll-linkpreview-footer">
-      <a href="#{domain}" target="_blank">#{domain}</a>
+      <a href="//#{domain}" target="_blank">#{domain}</a>
     </div>
   </div>
 </div>
