@@ -136,6 +136,7 @@ module Jekyll
     end
 
     class LinkpreviewTag < Liquid::Tag
+      @source_dir = ''
       @@cache_dir = '_cache'
       @@template_dir = '_includes'
 
@@ -145,6 +146,7 @@ module Jekyll
       end
 
       def render(context)
+        @source_dir = context.registers[:site].config['source']
         url = get_url_from(context)
         properties = get_properties(url)
         render_linkpreview properties
@@ -220,7 +222,9 @@ module Jekyll
 
       private
       def get_custom_template_path(properties)
-        File.join Dir.pwd, @@template_dir, properties.template_file
+        @source_dir.nil? || @source_dir.empty? ?
+          File.join(Dir.pwd, @@template_dir, properties.template_file) :
+          File.join(Dir.pwd, @source_dir, @@template_dir, properties.template_file)
       end
 
       private
