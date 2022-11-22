@@ -34,6 +34,7 @@ See https://jekyllrb.com/docs/plugins/installation/ .
 ## Usage
 
 1. Create `_cache` directory.
+   * This directory _must_ exist under your project root even if you've modified the [site source](https://jekyllrb.com/docs/configuration/options/).
 
 1. Embed [linkpreview.css](assets/css/linkpreview.css) into your Website.
 
