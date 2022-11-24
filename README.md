@@ -50,6 +50,8 @@ You can override the default templates used for generating previews, both in cas
 ### Template for pages where Open Graph protocol metadata exists
 
  1. Place `linkpreview.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview.html`)
+     * The folder is the same one you would store files for use with `{% include fragment.html %}` tag. 
+       Therefore, it *must* be under the [site's source](https://jekyllrb.com/docs/configuration/options/).
 
  2. Use built-in variables to extract data which you would like to render. Available variables are:
   * **link_url** i.e. `{{ link_url }}`
@@ -61,6 +63,8 @@ You can override the default templates used for generating previews, both in cas
 ### Template for pages where Open Graph protocol metadata does not exist
 
 1. Place `linkpreview_nog.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview_nog.html`)
+   * The folder is the same one you would store files for use with `{% include fragment.html %}` tag.
+     Therefore, it *must* be under the [site's source](https://jekyllrb.com/docs/configuration/options/).
 
  2. Use built-in variables to extract data which you would like to render. Available variables are:
   * **link_url** i.e. `{{ link_url }}`
