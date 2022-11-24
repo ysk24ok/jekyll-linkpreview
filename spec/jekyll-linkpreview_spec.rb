@@ -524,57 +524,62 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
     end
   end
 
-  describe '#render' do
-    before do
-      @title = 'awesome.org - an awesome organization in the world'
-      @domain = 'awesome.org'
-      @url = "https://#{@domain}/about"
-      @image = "https://#{@domain}/images/favicon.ico"
-      @description = 'An awesome organization in the world.'
-      tokenizer = Liquid::Tokenizer.new('')
-      parse_context = Liquid::ParseContext.new
-      @tag = TestLinkpreviewTag.parse(nil, @url, tokenizer, parse_context)
-    end
+  where(:site_source) do
+    [
+      [Dir.pwd], # Default value for Jekyll
+      ["."], # Explicitly specified
+      ["_content"], # Modified
+    ]
+  end
+  with_them do
+    source = params[:site_source]
+    describe '#render' do
+      before do
+        @title = 'awesome.org - an awesome organization in the world'
+        @domain = 'awesome.org'
+        @url = "https://#{@domain}/about"
+        @image = "https://#{@domain}/images/favicon.ico"
+        @description = 'An awesome organization in the world.'
+        tokenizer = Liquid::Tokenizer.new('')
+        parse_context = Liquid::ParseContext.new
+        @tag = TestLinkpreviewTag.parse(nil, @url, tokenizer, parse_context)
+        Dir.mkdir File.join(source, @tag.template_dir)
+      end
 
-    def test_cases
-      [
-        [Dir.pwd], # Default value for Jekyll
-        ["."], # Explicitly specified
-        ["_content"], # Modified
-      ]
-    end
+      after do
+        FileUtils.rm_r File.join(source, @tag.template_dir)
+      end
 
-    def check_default_template_with_image_is_rendered(html)
-      doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
-      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').attribute('href').value).to eq "//#{@domain}"
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]/a/img').attribute('src').value).to eq @image
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
-    end
+      def check_default_template_with_image_is_rendered(html)
+        doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+        expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
+        expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').attribute('href').value).to eq "//#{@domain}"
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]/a/img').attribute('src').value).to eq @image
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
+      end
 
-    def check_default_template_without_image_is_rendered(html)
-      doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
-      expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').attribute('href').value).to eq "//#{@domain}"
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]')).to be_empty
-      expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
-    end
+      def check_default_template_without_image_is_rendered(html)
+        doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+        expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
+        expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').inner_text).to eq @domain
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-footer"]/a').attribute('href').value).to eq "//#{@domain}"
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-image"]')).to be_empty
+        expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
+      end
 
-    def get_context(source_dir)
-      config = { 'source' => source_dir, 'skip_config_files' => 'true' }
-      Liquid::Context.new({}, {}, {
-        :site => Jekyll::Site.new(Jekyll::configuration(config))
-      })
-    end
+      def get_context(source_dir)
+        config = { 'source' => source_dir, 'skip_config_files' => 'true' }
+        Liquid::Context.new({}, {}, {
+          :site => Jekyll::Site.new(Jekyll::configuration(config))
+        })
+      end
 
-    def test_with_ogp_template(source)
-      Dir.mkdir File.join(source, @tag.template_dir)
-      @filepath = File.join source, @tag.template_dir, 'linkpreview.html'
-      File.open(@filepath, 'w') { |f| f.write <<-EOS
+      def create_ogp_template(source)
+        @filepath = File.join source, @tag.template_dir, 'linkpreview.html'
+        File.open(@filepath, 'w') { |f| f.write <<-EOS
 <div>
   <p class="title">{{ link_title }}</p>
   <p class="url">{{ link_url }}</p>
@@ -583,15 +588,12 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
   <p class="description">{{ link_description }}</p>
 </dic>
 EOS
-      }
-      yield
-      FileUtils.rm_r File.join(source, @tag.template_dir)
-    end
+        }
+      end
 
-    def test_with_nogp_template(source)
-      Dir.mkdir File.join(source, @tag.template_dir)
-      @filepath = File.join source, @tag.template_dir, 'linkpreview_nog.html'
-      File.open(@filepath, 'w') { |f| f.write <<-EOS
+      def create_nogp_template(source)
+        @filepath = File.join source, @tag.template_dir, 'linkpreview_nog.html'
+        File.open(@filepath, 'w') { |f| f.write <<-EOS
 <div>
   <p class="title">{{ link_title }}</p>
   <p class="url">{{ link_url }}</p>
@@ -599,45 +601,38 @@ EOS
   <p class="description">{{ link_description }}</p>
 </dic>
 EOS
-      }
-      yield
-      FileUtils.rm_r File.join(source, @tag.template_dir)
-    end
-
-    describe 'custom template for OpenGraphProperties' do
-      before do
-        allow(@tag).to receive(:get_properties).and_return(
-          Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
-        )
+        }
       end
 
-      where(:site_source) do
-        test_cases
-      end
-
-      with_them do
-        source = params[:site_source]
+      describe 'custom template for OpenGraphProperties' do
+        before do
+          allow(@tag).to receive(:get_properties).and_return(
+            Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
+          )
+        end
 
         context 'when a custom template file for OpenGraphProperties exists' do
+          before do
+            create_ogp_template source
+          end
           it 'can render custom template' do
-            test_with_ogp_template(source) do
-              html = @tag.render get_context(source)
-              doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-              expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
-              expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
-              expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
-              expect(doc.xpath('//p[@class="image"]').inner_text).to eq @image
-              expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
-            end
+            html = @tag.render get_context(source)
+            doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+            expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
+            expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
+            expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
+            expect(doc.xpath('//p[@class="image"]').inner_text).to eq @image
+            expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
           end
         end
 
         context 'when a custom template file for NonOpenGraphProperties exists' do
+          before do
+            create_nogp_template source
+          end
           it 'cannot render custom template' do
-            test_with_nogp_template(source) do
-              html = @tag.render get_context(source)
-              check_default_template_with_image_is_rendered html
-            end
+            html = @tag.render get_context(source)
+            check_default_template_with_image_is_rendered html
           end
         end
 
@@ -648,41 +643,35 @@ EOS
           end
         end
       end
-    end
 
-    describe 'custom template for NonOpenGraphProperties' do
-      before do
-        allow(@tag).to receive(:get_properties).and_return(
-          Jekyll::Linkpreview::NonOpenGraphProperties.new @title, @url, @description, @domain
-        )
-      end
-
-      where(:site_source) do
-        test_cases
-      end
-
-      with_them do
-        source = params[:site_source]
+      describe 'custom template for NonOpenGraphProperties' do
+        before do
+          allow(@tag).to receive(:get_properties).and_return(
+            Jekyll::Linkpreview::NonOpenGraphProperties.new @title, @url, @description, @domain
+          )
+        end
 
         context 'when a custom template file for NonOpenGraphProperties exists' do
+          before do
+            create_nogp_template source
+          end
           it 'can render custom template' do
-            test_with_nogp_template(source) do
-              html = @tag.render get_context(source)
-              doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-              expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
-              expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
-              expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
-              expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
-            end
+            html = @tag.render get_context(source)
+            doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+            expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
+            expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
+            expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
+            expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
           end
         end
 
         context 'when a custom template file for OpenGraphProperties exists' do
+          before do
+            create_ogp_template source
+          end
           it 'cannot render custom template' do
-            test_with_ogp_template(source) do
-              html = @tag.render get_context(source)
-              check_default_template_without_image_is_rendered html
-            end
+            html = @tag.render get_context(source)
+            check_default_template_without_image_is_rendered html
           end
         end
 
