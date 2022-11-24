@@ -22,7 +22,6 @@ end
 
 class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
   attr_reader :markup
-  attr_writer :source_dir
 
   def cache_dir
     @@cache_dir
