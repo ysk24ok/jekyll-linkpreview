@@ -542,7 +542,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         tokenizer = Liquid::Tokenizer.new('')
         parse_context = Liquid::ParseContext.new
         @tag = TestLinkpreviewTag.parse(nil, @url, tokenizer, parse_context)
-        Dir.mkdir File.join(source, @tag.template_dir)
+        FileUtils.mkdir_p File.join(source, @tag.template_dir)
       end
 
       after do
