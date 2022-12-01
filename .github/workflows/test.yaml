@@ -18,6 +18,16 @@ jobs:
           - jekyll-41
           - jekyll-42
           - jekyll-43
+        exclude:
+          # To prevent 'cannot load such file -- rexml/parsers/baseparser'
+          - ruby: "3.1"
+            appraisal: jekyll-35
+          - ruby: "3.1"
+            appraisal: jekyll-36
+          - ruby: "3.1"
+            appraisal: jekyll-37
+          - ruby: "3.1"
+            appraisal: jekyll-38
     steps:
       - name: Checkout
         uses: actions/checkout@v3
