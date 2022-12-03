@@ -226,8 +226,7 @@ module Jekyll
 
       private
       def get_source_dir_from(context)
-        source_dir = File.absolute_path context.registers[:site].config['source'], Dir.pwd
-        source_dir.nil? ? '.' : source_dir
+        File.absolute_path context.registers[:site].config['source'], Dir.pwd
       end
 
       private
