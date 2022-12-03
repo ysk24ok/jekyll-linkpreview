@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "rake", "~> 12.3.3"
   spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "rspec-parameterized", "~> 0.5.2"
   spec.add_development_dependency "appraisal", "~> 2.2.0"
   spec.add_development_dependency "wwtd", "~> 1.4.1"
 end

@@ -147,7 +147,7 @@ module Jekyll
       def render(context)
         url = get_url_from(context)
         properties = get_properties(url)
-        render_linkpreview properties
+        render_linkpreview context, properties
       end
 
       def get_properties(url)
@@ -208,8 +208,8 @@ module Jekyll
       end
 
       private
-      def render_linkpreview(properties)
-        template_path = get_custom_template_path properties
+      def render_linkpreview(context, properties)
+        template_path = get_custom_template_path context, properties
         if File.exist?(template_path)
           hash = properties.to_hash_for_custom_template
           gen_custom_template template_path, hash
@@ -219,8 +219,14 @@ module Jekyll
       end
 
       private
-      def get_custom_template_path(properties)
-        File.join Dir.pwd, @@template_dir, properties.template_file
+      def get_custom_template_path(context, properties)
+        source_dir = get_source_dir_from context
+        File.join source_dir, @@template_dir, properties.template_file
+      end
+
+      private
+      def get_source_dir_from(context)
+        File.absolute_path context.registers[:site].config['source'], Dir.pwd
       end
 
       private
