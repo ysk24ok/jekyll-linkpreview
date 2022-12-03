@@ -525,7 +525,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
 
   where(:site_source) do
     [
-      [Dir.pwd], # Default value for Jekyll
+      [Jekyll::Configuration::DEFAULTS["source"]],
       ["."], # Explicitly specified
       ["_content"], # Modified
     ]
