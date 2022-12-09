@@ -1,0 +1,48 @@
+name: Release
+on:
+  push:
+    branches:
+      - master
+jobs:
+  check-release:
+    container:
+      image: ruby:3.1
+    outputs:
+      release: ${{ steps.check-release.outputs.release }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - id: check-release
+        name: Decide whether to release
+        run: |
+          set +e
+          git diff --exit-code --quiet HEAD~1 -- lib/jekyll-linkpreview/version.rb
+          if [ $? = 1 ]; then
+            echo release=true >> ${GITHUB_OUTPUT}
+          else
+            echo release=false >> ${GITHUB_OUTPUT}
+          fi
+  release:
+    container:
+      image: ruby:3.1
+    if: needs.check-release.outputs.release == 'true'
+    needs: check-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - env:
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        name: Set credentials for RubyGems
+        run: |
+          mkdir ~/.gem
+          echo :rubygems_api_key: ${RUBYGEMS_API_KEY} > ~/.gem/credentials
+      - name: Install dependencies
+        run: bundle install
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Make a new release
+        run: bundle exec rake release
