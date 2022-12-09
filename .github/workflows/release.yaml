@@ -40,6 +40,7 @@ jobs:
         run: |
           mkdir ~/.gem
           echo :rubygems_api_key: ${RUBYGEMS_API_KEY} > ~/.gem/credentials
+          chmod 0600 ~/.gem/credentials
       - name: Configure git
         run: |
           git config --global user.email "yusuke.nishioka.0713@gmail..com"
