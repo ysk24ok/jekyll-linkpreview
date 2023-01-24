@@ -189,7 +189,9 @@ module Jekyll
 
       private
       def create_properties_from_page(page)
-        if page.meta_tags['property'].empty? then
+        if !%w[og:title og:type og:url og:image].all? { |required_tag|
+          page.meta_tags['property'].include?(required_tag)
+        }
           factory = NonOpenGraphPropertiesFactory.new
         else
           factory = OpenGraphPropertiesFactory.new
