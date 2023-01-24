@@ -116,8 +116,8 @@ module Jekyll
 
     class NonOpenGraphPropertiesFactory
       def from_page(page)
-        NonOpenGraphProperties.new(
-          page.title, page.url, get_description(page), page.host)
+        title = page.title.empty? ? page.best_title : page.title
+        NonOpenGraphProperties.new(title, page.url, get_description(page), page.host)
       end
 
       def from_hash(hash)
