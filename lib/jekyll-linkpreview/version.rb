@@ -1,5 +1,5 @@
 module Jekyll
   module Linkpreview
-    VERSION = "0.4.1"
+    VERSION = "0.6.0.rc1"
   end
 end
