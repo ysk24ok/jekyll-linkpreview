@@ -481,10 +481,31 @@ RSpec.describe 'Jekyll::Linkpreview::NonOpenGraphPropertiesFactory' do
 </html>
 EOS
       )
+      @page_title_in_body = MetaInspector.new(
+        @url,
+        :document => <<-EOS
+<html>
+  <body>
+    <title>#{@title}</title>
+  </body>
+</html>
+      EOS
+      )
     end
 
-    it 'can return an instance of NonOpenGraphProperties' do
-      got = @factory.from_page(@page).to_hash
+    context 'when parsing well-written HTML' do
+      it 'can return an instance of NonOpenGraphProperties' do
+        check_properties(@factory.from_page(@page).to_hash)
+      end
+    end
+
+    context 'when parsing HTML whose title tag is in body' do
+      it 'can return an instance of NonOpenGraphProperties' do
+        check_properties(@factory.from_page(@page_title_in_body).to_hash)
+      end
+    end
+
+    def check_properties(got)
       expect(got['title']).to eq @title
       expect(got['url']).to eq @url
       expect(got['description']).to eq '...'
