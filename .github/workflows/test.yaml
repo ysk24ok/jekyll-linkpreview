@@ -1,5 +1,11 @@
 name: Test
-on: [push]
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
 jobs:
   test:
     container:
@@ -31,6 +37,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - if: matrix.ruby == '2.7'
+        name: Update RubyGems version
+        # sass-embedded 1.57.1, which is one of dependencies of jekyll-sass-converter 3.0,
+        # requires rubygems version >= 3.3.22
+        # (see https://jekyllrb.com/news/2022/12/21/jekyll-sass-converter-3.0-released/
+        #  for the jekyll-sass-converter 3.0 release).
+        # Just running `gem update --system` upgrades rubygems version to '>= 2.4',
+        # which appraisal 2.4.1 can't work with.
+        run: gem update --system 3.3.22
       - name: Install dependencies
         run: bundle install
       - name: Install dependencies for each appraisal
