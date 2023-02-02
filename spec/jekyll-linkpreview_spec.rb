@@ -708,6 +708,7 @@ EOS
   describe '#get_properties' do
     before do
       @title = 'awesome.org - an awesome organization in the world'
+      @type = 'website'
       @domain = 'awesome.org'
       @url = "https://#{@domain}/about"
       @image = "https://#{@domain}/images/favicon.ico"
@@ -726,6 +727,7 @@ EOS
 <html>
   <head>
     <meta property="og:title" content="#{@title}" />
+    <meta property="og:type" content="#{@type}" />
     <meta property="og:url" content="#{@url}" />
     <meta property="og:image" content="#{@image}" />
     <meta property="og:description" content="#{@description}" />
