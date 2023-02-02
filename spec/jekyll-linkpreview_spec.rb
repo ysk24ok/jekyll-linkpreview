@@ -761,6 +761,67 @@ EOS
         expect(got['description']).to eq @description
       end
     end
+
+    context 'when the page has all required OGP tags' do
+      before do
+        allow(@tag).to receive(:fetch).and_return(
+          MetaInspector.new(
+            @url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="#{@title}" />
+    <meta property="og:type" content="#{@type}" />
+    <meta property="og:url" content="#{@url}" />
+    <meta property="og:image" content="#{@image}" />
+  </head>
+</html>
+EOS
+          )
+        )
+        Dir.mkdir @tag.cache_dir
+      end
+
+      after do
+        FileUtils.rm_r(@tag.cache_dir)
+      end
+
+      it 'can spawn OpenGraphProtocolFactory' do
+        expect(@tag).to receive(:fetch).exactly(1).times
+        got = @tag.get_properties @url
+        expect(got.instance_of? Jekyll::Linkpreview::OpenGraphProperties).to eq true
+      end
+    end
+
+    context 'when the page is missing required OGP tags' do
+      before do
+        allow(@tag).to receive(:fetch).and_return(
+          MetaInspector.new(
+            @url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="something" content="unrelated" />
+    <meta property="is" content="here" />
+    <meta property="og:title" content="is set but other required tags are missing" />
+  </head>
+</html>
+EOS
+          )
+        )
+        Dir.mkdir @tag.cache_dir
+      end
+
+      after do
+        FileUtils.rm_r(@tag.cache_dir)
+      end
+
+      it 'can spawn NonOpenGraphProtocolFactory' do
+        expect(@tag).to receive(:fetch).exactly(1).times
+        got = @tag.get_properties @url
+        expect(got.instance_of? Jekyll::Linkpreview::NonOpenGraphProperties).to eq true
+      end
+    end
   end
 end
 
