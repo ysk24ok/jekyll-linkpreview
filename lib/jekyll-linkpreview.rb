@@ -10,8 +10,9 @@ module Jekyll
     class OpenGraphProperties
       @@template_file = 'linkpreview.html'
 
-      def initialize(title, url, image, description, domain)
+      def initialize(title, type, url, image, description, domain)
         @title = title
+        @type = type
         @url = url
         @image = image
         @description = description
@@ -21,6 +22,7 @@ module Jekyll
       def to_hash()
         {
           'title' => @title,
+          'type' => @type,
           'url' => @url,
           'image' => @image,
           'description' => @description,
@@ -31,6 +33,7 @@ module Jekyll
       def to_hash_for_custom_template()
         {
           'link_title' => @title,
+          'link_type' => @type,
           'link_url' => @url,
           'link_image' => @image,
           'link_description' => @description,
@@ -48,16 +51,17 @@ module Jekyll
         og_properties = page.meta_tags['property']
         image_url = get_og_property(og_properties, 'og:image')
         title = get_og_property(og_properties, 'og:title')
+        type = get_og_property(og_properties, 'og:type')
         url = get_og_property(og_properties, 'og:url')
         image = convert_to_absolute_url(image_url, page.root_url)
         description = get_og_property(og_properties, 'og:description')
         domain = page.host
-        OpenGraphProperties.new(title, url, image, description, domain)
+        OpenGraphProperties.new(title, type, url, image, description, domain)
       end
 
       def from_hash(hash)
         OpenGraphProperties.new(
-          hash['title'], hash['url'], hash['image'], hash['description'], hash['domain'])
+          hash['title'], hash['type'], hash['url'], hash['image'], hash['description'], hash['domain'])
       end
 
       private
@@ -188,7 +192,9 @@ module Jekyll
 
       private
       def create_properties_from_page(page)
-        if page.meta_tags['property'].empty? then
+        if !%w[og:title og:type og:url og:image].all? { |required_tag|
+          page.meta_tags['property'].include?(required_tag)
+        }
           factory = NonOpenGraphPropertiesFactory.new
         else
           factory = OpenGraphPropertiesFactory.new

@@ -36,17 +36,19 @@ end
 RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
   before do
     @title = 'awesome.org - an awesome organization in the world'
+    @type = 'website'
     @url = 'https://awesome.org/about'
     @image = 'https://awesome.org/images/favicon.ico'
     @description = 'An awesome organization in the world.'
     @domain = 'awesome.org'
-    @properties = Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
+    @properties = Jekyll::Linkpreview::OpenGraphProperties.new @title, @type, @url, @image, @description, @domain
   end
 
   describe '#to_hash' do
     it 'can return hash' do
       got = @properties.to_hash
       expect(got['title']).to eq @title
+      expect(got['type']).to eq @type
       expect(got['url']).to eq @url
       expect(got['image']).to eq @image
       expect(got['description']).to eq @description
@@ -58,6 +60,7 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
     it 'can return hash for custom template' do
       got = @properties.to_hash_for_custom_template
       expect(got['link_title']).to eq @title
+      expect(got['link_type']).to eq @type
       expect(got['link_url']).to eq @url
       expect(got['link_image']).to eq @image
       expect(got['link_description']).to eq @description
@@ -445,6 +448,7 @@ EOS
     before do
       @hash = {
         'title' => 'awesome.org - an awesome organization in the world',
+        'type' => 'website',
         'url' => 'https://awesome.org/about',
         'domain' => 'awesome.org',
         'image' => 'https://awesome.org/images/favicon.ico',
@@ -556,6 +560,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
     describe '#render' do
       before do
         @title = 'awesome.org - an awesome organization in the world'
+        @type = 'website'
         @domain = 'awesome.org'
         @url = "https://#{@domain}/about"
         @image = "https://#{@domain}/images/favicon.ico"
@@ -627,7 +632,7 @@ EOS
       describe 'custom template for OpenGraphProperties' do
         before do
           allow(@tag).to receive(:get_properties).and_return(
-            Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
+            Jekyll::Linkpreview::OpenGraphProperties.new @title, @type, @url, @image, @description, @domain
           )
         end
 
@@ -708,6 +713,7 @@ EOS
   describe '#get_properties' do
     before do
       @title = 'awesome.org - an awesome organization in the world'
+      @type = 'website'
       @domain = 'awesome.org'
       @url = "https://#{@domain}/about"
       @image = "https://#{@domain}/images/favicon.ico"
@@ -726,6 +732,7 @@ EOS
 <html>
   <head>
     <meta property="og:title" content="#{@title}" />
+    <meta property="og:type" content="#{@type}" />
     <meta property="og:url" content="#{@url}" />
     <meta property="og:image" content="#{@image}" />
     <meta property="og:description" content="#{@description}" />
@@ -746,6 +753,7 @@ EOS
 
         got = @tag.get_properties(@url).to_hash
         expect(got['title']).to eq @title
+        expect(got['type']).to eq @type
         expect(got['url']).to eq @url
         expect(got['domain']).to eq @domain
         expect(got['image']).to eq @image
@@ -753,10 +761,72 @@ EOS
 
         got = @tag.get_properties(@url).to_hash
         expect(got['title']).to eq @title
+        expect(got['type']).to eq @type
         expect(got['url']).to eq @url
         expect(got['domain']).to eq @domain
         expect(got['image']).to eq @image
         expect(got['description']).to eq @description
+      end
+    end
+
+    context 'when the page has all required OGP tags' do
+      before do
+        allow(@tag).to receive(:fetch).and_return(
+          MetaInspector.new(
+            @url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="og:title" content="#{@title}" />
+    <meta property="og:type" content="#{@type}" />
+    <meta property="og:url" content="#{@url}" />
+    <meta property="og:image" content="#{@image}" />
+  </head>
+</html>
+EOS
+          )
+        )
+        Dir.mkdir @tag.cache_dir
+      end
+
+      after do
+        FileUtils.rm_r(@tag.cache_dir)
+      end
+
+      it 'can spawn OpenGraphProtocolFactory' do
+        expect(@tag).to receive(:fetch).exactly(1).times
+        got = @tag.get_properties @url
+        expect(got.instance_of? Jekyll::Linkpreview::OpenGraphProperties).to eq true
+      end
+    end
+
+    context 'when the page is missing required OGP tags' do
+      before do
+        allow(@tag).to receive(:fetch).and_return(
+          MetaInspector.new(
+            @url,
+            :document => <<-EOS
+<html>
+  <head>
+    <meta property="something" content="unrelated" />
+    <meta property="is" content="here" />
+    <meta property="og:title" content="is set but other required tags are missing" />
+  </head>
+</html>
+EOS
+          )
+        )
+        Dir.mkdir @tag.cache_dir
+      end
+
+      after do
+        FileUtils.rm_r(@tag.cache_dir)
+      end
+
+      it 'can spawn NonOpenGraphProtocolFactory' do
+        expect(@tag).to receive(:fetch).exactly(1).times
+        got = @tag.get_properties @url
+        expect(got.instance_of? Jekyll::Linkpreview::NonOpenGraphProperties).to eq true
       end
     end
   end
