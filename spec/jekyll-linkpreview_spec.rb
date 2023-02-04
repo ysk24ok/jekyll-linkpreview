@@ -36,17 +36,19 @@ end
 RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
   before do
     @title = 'awesome.org - an awesome organization in the world'
+    @type = 'website'
     @url = 'https://awesome.org/about'
     @image = 'https://awesome.org/images/favicon.ico'
     @description = 'An awesome organization in the world.'
     @domain = 'awesome.org'
-    @properties = Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
+    @properties = Jekyll::Linkpreview::OpenGraphProperties.new @title, @type, @url, @image, @description, @domain
   end
 
   describe '#to_hash' do
     it 'can return hash' do
       got = @properties.to_hash
       expect(got['title']).to eq @title
+      expect(got['type']).to eq @type
       expect(got['url']).to eq @url
       expect(got['image']).to eq @image
       expect(got['description']).to eq @description
@@ -58,6 +60,7 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
     it 'can return hash for custom template' do
       got = @properties.to_hash_for_custom_template
       expect(got['link_title']).to eq @title
+      expect(got['link_type']).to eq @type
       expect(got['link_url']).to eq @url
       expect(got['link_image']).to eq @image
       expect(got['link_description']).to eq @description
@@ -445,6 +448,7 @@ EOS
     before do
       @hash = {
         'title' => 'awesome.org - an awesome organization in the world',
+        'type' => 'website',
         'url' => 'https://awesome.org/about',
         'domain' => 'awesome.org',
         'image' => 'https://awesome.org/images/favicon.ico',
@@ -556,6 +560,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
     describe '#render' do
       before do
         @title = 'awesome.org - an awesome organization in the world'
+        @type = 'website'
         @domain = 'awesome.org'
         @url = "https://#{@domain}/about"
         @image = "https://#{@domain}/images/favicon.ico"
@@ -627,7 +632,7 @@ EOS
       describe 'custom template for OpenGraphProperties' do
         before do
           allow(@tag).to receive(:get_properties).and_return(
-            Jekyll::Linkpreview::OpenGraphProperties.new @title, @url, @image, @description, @domain
+            Jekyll::Linkpreview::OpenGraphProperties.new @title, @type, @url, @image, @description, @domain
           )
         end
 
@@ -748,6 +753,7 @@ EOS
 
         got = @tag.get_properties(@url).to_hash
         expect(got['title']).to eq @title
+        expect(got['type']).to eq @type
         expect(got['url']).to eq @url
         expect(got['domain']).to eq @domain
         expect(got['image']).to eq @image
@@ -755,6 +761,7 @@ EOS
 
         got = @tag.get_properties(@url).to_hash
         expect(got['title']).to eq @title
+        expect(got['type']).to eq @type
         expect(got['url']).to eq @url
         expect(got['domain']).to eq @domain
         expect(got['image']).to eq @image

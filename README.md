@@ -56,6 +56,7 @@ You can override the default templates used for generating previews, both in cas
  2. Use built-in variables to extract data which you would like to render. Available variables are:
   * **link_url** i.e. `{{ link_url }}`
   * **link_title** i.e. `{{ link_title }}`
+  * **link_type** i.e. `{{ link_type }}`
   * **link_image** i.e. `{{ link_image }}`
   * **link_description** i.e. `{{ link_description }}`
   * **link_domain** i.e. `{{ link_domain }}`
