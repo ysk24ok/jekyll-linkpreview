@@ -253,7 +253,6 @@ EOS
         end
         html = <<-EOS
 <div class="jekyll-linkpreview-wrapper">
-  <p><a href="#{url}" target="_blank">#{url}</a></p>
   <div class="jekyll-linkpreview-wrapper-inner">
     <div class="jekyll-linkpreview-content">
 #{image_html}
