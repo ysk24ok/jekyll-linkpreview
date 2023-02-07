@@ -244,11 +244,11 @@ module Jekyll
         image_html = ""
         if image then
           image_html = <<-EOS
-<div class="jekyll-linkpreview-image">
-  <a href="#{url}" target="_blank">
-    <img src="#{image}" />
-  </a>
-</div>
+      <div class="jekyll-linkpreview-image">
+        <a href="#{url}" target="_blank">
+          <img src="#{image}" />
+        </a>
+      </div>
 EOS
         end
         html = <<-EOS
