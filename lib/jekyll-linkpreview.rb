@@ -10,35 +10,20 @@ module Jekyll
     class OpenGraphProperties
       @@template_file = 'linkpreview.html'
 
-      def initialize(title, type, url, image, description, domain)
-        @title = title
-        @type = type
-        @url = url
-        @image = image
-        @description = description
-        @domain = domain
+      def initialize(properties)
+        @properties = properties
       end
 
       def to_hash()
-        {
-          'title' => @title,
-          'type' => @type,
-          'url' => @url,
-          'image' => @image,
-          'description' => @description,
-          'domain' => @domain,
-        }
+        @properties
       end
 
       def to_hash_for_custom_template()
-        {
-          'link_title' => @title,
-          'link_type' => @type,
-          'link_url' => @url,
-          'link_image' => @image,
-          'link_description' => @description,
-          'link_domain' => @domain
+        hash_for_custom_template = {}
+        @properties.each{ |key, value|
+          hash_for_custom_template['link_' + key] = value
         }
+        hash_for_custom_template
       end
 
       def template_file()
@@ -48,24 +33,24 @@ module Jekyll
 
     class OpenGraphPropertiesFactory
       def from_page(page)
-        og_properties = page.meta_tags['property']
-        image_url = get_og_property(og_properties, 'og:image')
-        title = get_og_property(og_properties, 'og:title')
-        type = get_og_property(og_properties, 'og:type')
-        url = get_og_property(og_properties, 'og:url')
-        image = convert_to_absolute_url(image_url, page.root_url)
-        description = get_og_property(og_properties, 'og:description')
-        domain = page.host
-        OpenGraphProperties.new(title, type, url, image, description, domain)
+        properties = page.meta_tags['property']
+        og_properties = {
+          'title' => get_property(properties, 'og:title'),
+          'type' => get_property(properties, 'og:type'),
+          'url' => get_property(properties, 'og:url'),
+          'image' => convert_to_absolute_url(get_property(properties, 'og:image'), page.root_url),
+          'description' => get_property(properties, 'og:description'),
+          'domain' => page.host,
+        }
+        OpenGraphProperties.new(og_properties)
       end
 
       def from_hash(hash)
-        OpenGraphProperties.new(
-          hash['title'], hash['type'], hash['url'], hash['image'], hash['description'], hash['domain'])
+        OpenGraphProperties.new(hash)
       end
 
       private
-      def get_og_property(properties, key)
+      def get_property(properties, key)
         if !properties.key? key then
           return nil
         end
@@ -88,29 +73,20 @@ module Jekyll
     class NonOpenGraphProperties
       @@template_file = 'linkpreview_nog.html'
 
-      def initialize(title, url, description, domain)
-        @title = title
-        @url = url
-        @description = description
-        @domain = domain
+      def initialize(properties)
+        @properties = properties
       end
 
       def to_hash()
-        {
-          'title' => @title,
-          'url' => @url,
-          'description' => @description,
-          'domain' => @domain,
-        }
+        @properties
       end
 
       def to_hash_for_custom_template()
-        {
-          'link_title' => @title,
-          'link_url' => @url,
-          'link_description' => @description,
-          'link_domain' => @domain
+        hash_for_custom_template = {}
+        @properties.each{ |key, value|
+          hash_for_custom_template['link_' + key] = value
         }
+        hash_for_custom_template
       end
 
       def template_file()
@@ -120,12 +96,16 @@ module Jekyll
 
     class NonOpenGraphPropertiesFactory
       def from_page(page)
-        NonOpenGraphProperties.new(page.best_title, page.url, get_description(page), page.host)
+        NonOpenGraphProperties.new({
+          'title' => page.best_title,
+          'url' => page.url,
+          'description' => get_description(page),
+          'domain' => page.host,
+        })
       end
 
       def from_hash(hash)
-        NonOpenGraphProperties.new(
-          hash['title'], hash['url'], hash['description'], hash['domain'])
+        NonOpenGraphProperties.new(hash)
       end
 
       private

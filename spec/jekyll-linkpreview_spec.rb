@@ -41,7 +41,14 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
     @image = 'https://awesome.org/images/favicon.ico'
     @description = 'An awesome organization in the world.'
     @domain = 'awesome.org'
-    @properties = Jekyll::Linkpreview::OpenGraphProperties.new @title, @type, @url, @image, @description, @domain
+    @properties = Jekyll::Linkpreview::OpenGraphProperties.new({
+      'title' => @title,
+      'type' => @type,
+      'url' => @url,
+      'image' => @image,
+      'description' => @description,
+      'domain' => @domain,
+    })
   end
 
   describe '#to_hash' do
@@ -75,7 +82,12 @@ RSpec.describe 'Jekyll::Linkpreview::NonOpenGraphProperties' do
     @url = 'https://awesome.org/about'
     @description = 'An awesome organization in the world.'
     @domain = 'awesome.org'
-    @properties = Jekyll::Linkpreview::NonOpenGraphProperties.new @title, @url, @description, @domain
+    @properties = Jekyll::Linkpreview::NonOpenGraphProperties.new({
+      'title' => @title,
+      'url' => @url,
+      'description' => @description,
+      'domain' => @domain,
+    })
   end
 
   describe '#to_hash' do
@@ -632,7 +644,14 @@ EOS
       describe 'custom template for OpenGraphProperties' do
         before do
           allow(@tag).to receive(:get_properties).and_return(
-            Jekyll::Linkpreview::OpenGraphProperties.new @title, @type, @url, @image, @description, @domain
+            Jekyll::Linkpreview::OpenGraphProperties.new({
+              'title' => @title,
+              'type' => @type,
+              'url' => @url,
+              'image' => @image,
+              'description' => @description,
+              'domain' => @domain,
+            })
           )
         end
 
@@ -672,7 +691,12 @@ EOS
       describe 'custom template for NonOpenGraphProperties' do
         before do
           allow(@tag).to receive(:get_properties).and_return(
-            Jekyll::Linkpreview::NonOpenGraphProperties.new @title, @url, @description, @domain
+            Jekyll::Linkpreview::NonOpenGraphProperties.new({
+              'title' => @title,
+              'url' => @url,
+              'description' => @description,
+              'domain' => @domain,
+            })
           )
         end
 
