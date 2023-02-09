@@ -15,6 +15,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 2
+      # See https://github.com/actions/runner-images/issues/6775.
+      - name: Suppress 'detected dubious ownership' error.
+        run: git config --global --add safe.directory /__w/jekyll-linkpreview/jekyll-linkpreview
       - id: check-release
         name: Decide whether to release
         run: |
@@ -34,6 +37,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      # See https://github.com/actions/runner-images/issues/6775.
+      - name: Suppress 'detected dubious ownership' error.
+        run: git config --global --add safe.directory /__w/jekyll-linkpreview/jekyll-linkpreview
       - env:
           RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
         name: Set credentials for RubyGems
