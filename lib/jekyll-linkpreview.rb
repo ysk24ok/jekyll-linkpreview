@@ -7,11 +7,10 @@ require "jekyll-linkpreview/version"
 
 module Jekyll
   module Linkpreview
-    class OpenGraphProperties
-      @@template_file = 'linkpreview.html'
-
-      def initialize(properties)
+    class Properties
+      def initialize(properties, template_file)
         @properties = properties
+        @template_file = template_file
       end
 
       def to_hash()
@@ -27,11 +26,17 @@ module Jekyll
       end
 
       def template_file()
-        @@template_file
+        @template_file
       end
     end
 
     class OpenGraphPropertiesFactory
+      @@template_file = 'linkpreview.html'
+
+      def self.template_file
+        @@template_file
+      end
+
       def from_page(page)
         properties = page.meta_tags['property']
         og_properties = {
@@ -42,11 +47,11 @@ module Jekyll
           'description' => get_property(properties, 'og:description'),
           'domain' => page.host,
         }
-        OpenGraphProperties.new(og_properties)
+        Properties.new(og_properties, @@template_file)
       end
 
       def from_hash(hash)
-        OpenGraphProperties.new(hash)
+        Properties.new(hash, @@template_file)
       end
 
       private
@@ -70,42 +75,24 @@ module Jekyll
       end
     end
 
-    class NonOpenGraphProperties
+    class NonOpenGraphPropertiesFactory
       @@template_file = 'linkpreview_nog.html'
 
-      def initialize(properties)
-        @properties = properties
-      end
-
-      def to_hash()
-        @properties
-      end
-
-      def to_hash_for_custom_template()
-        hash_for_custom_template = {}
-        @properties.each{ |key, value|
-          hash_for_custom_template['link_' + key] = value
-        }
-        hash_for_custom_template
-      end
-
-      def template_file()
+      def self.template_file
         @@template_file
       end
-    end
 
-    class NonOpenGraphPropertiesFactory
       def from_page(page)
-        NonOpenGraphProperties.new({
+        Properties.new({
           'title' => page.best_title,
           'url' => page.url,
           'description' => get_description(page),
           'domain' => page.host,
-        })
+        }, @@template_file)
       end
 
       def from_hash(hash)
-        NonOpenGraphProperties.new(hash)
+        Properties.new(hash, @@template_file)
       end
 
       private

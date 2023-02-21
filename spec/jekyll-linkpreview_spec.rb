@@ -33,7 +33,7 @@ class TestLinkpreviewTag < Jekyll::Linkpreview::LinkpreviewTag
   end
 end
 
-RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
+RSpec.describe 'Jekyll::Linkpreview::Properties' do
   before do
     @title = 'awesome.org - an awesome organization in the world'
     @type = 'website'
@@ -41,14 +41,15 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
     @image = 'https://awesome.org/images/favicon.ico'
     @description = 'An awesome organization in the world.'
     @domain = 'awesome.org'
-    @properties = Jekyll::Linkpreview::OpenGraphProperties.new({
+    @template_file = 'linkpreview.html'
+    @properties = Jekyll::Linkpreview::Properties.new({
       'title' => @title,
       'type' => @type,
       'url' => @url,
       'image' => @image,
       'description' => @description,
       'domain' => @domain,
-    })
+    }, @template_file)
   end
 
   describe '#to_hash' do
@@ -74,39 +75,11 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphProperties' do
       expect(got['link_domain']).to eq @domain
     end
   end
-end
 
-RSpec.describe 'Jekyll::Linkpreview::NonOpenGraphProperties' do
-  before do
-    @title = 'awesome.org - an awesome organization in the world'
-    @url = 'https://awesome.org/about'
-    @description = 'An awesome organization in the world.'
-    @domain = 'awesome.org'
-    @properties = Jekyll::Linkpreview::NonOpenGraphProperties.new({
-      'title' => @title,
-      'url' => @url,
-      'description' => @description,
-      'domain' => @domain,
-    })
-  end
-
-  describe '#to_hash' do
-    it 'can return hash' do
-      got = @properties.to_hash
-      expect(got['title']).to eq @title
-      expect(got['url']).to eq @url
-      expect(got['description']).to eq @description
-      expect(got['domain']).to eq @domain
-    end
-  end
-
-  describe '#to_hash_for_custom_template' do
-    it 'can return hash for custom template' do
-      got = @properties.to_hash_for_custom_template
-      expect(got['link_title']).to eq @title
-      expect(got['link_url']).to eq @url
-      expect(got['link_description']).to eq @description
-      expect(got['link_domain']).to eq @domain
+  describe '#template_file' do
+    it 'can return template file' do
+      got = @properties.template_file
+      expect(got).to eq @template_file
     end
   end
 end
@@ -468,9 +441,9 @@ EOS
       }
     end
 
-    it 'can return an instance of OpenGraphProperties' do
+    it 'can return an instance of Properties' do
       got = @factory.from_hash(@hash)
-      expect(got.instance_of? Jekyll::Linkpreview::OpenGraphProperties).to eq true
+      expect(got.instance_of? Jekyll::Linkpreview::Properties).to eq true
       expect(got.to_hash).to eq @hash
     end
   end
@@ -509,14 +482,14 @@ EOS
       )
     end
 
-    context 'when parsing well-written HTML' do
-      it 'can return an instance of NonOpenGraphProperties' do
+    context 'when parsing HTML whose title tag is in head' do
+      it 'can get title and other properties' do
         check_properties(@factory.from_page(@page).to_hash)
       end
     end
 
     context 'when parsing HTML whose title tag is in body' do
-      it 'can return an instance of NonOpenGraphProperties' do
+      it 'can get title and other properties' do
         check_properties(@factory.from_page(@page_title_in_body).to_hash)
       end
     end
@@ -539,9 +512,9 @@ EOS
       }
     end
 
-    it 'can return an instance of NonOpenGraphProperties' do
+    it 'can return an instance of Properties' do
       got = @factory.from_hash(@hash)
-      expect(got.instance_of? Jekyll::Linkpreview::NonOpenGraphProperties).to eq true
+      expect(got.instance_of? Jekyll::Linkpreview::Properties).to eq true
       expect(got.to_hash).to eq @hash
     end
   end
@@ -641,10 +614,10 @@ EOS
         }
       end
 
-      describe 'custom template for OpenGraphProperties' do
+      describe 'custom template for ogp pages' do
         before do
           allow(@tag).to receive(:get_properties).and_return(
-            Jekyll::Linkpreview::OpenGraphProperties.new({
+            Jekyll::Linkpreview::OpenGraphPropertiesFactory.new.from_hash({
               'title' => @title,
               'type' => @type,
               'url' => @url,
@@ -655,7 +628,7 @@ EOS
           )
         end
 
-        context 'when a custom template file for OpenGraphProperties exists' do
+        context 'when a custom template file for ogp pages exists' do
           before do
             create_ogp_template source
           end
@@ -670,7 +643,7 @@ EOS
           end
         end
 
-        context 'when a custom template file for NonOpenGraphProperties exists' do
+        context 'when a custom template file for non-ogp pages exists' do
           before do
             create_nogp_template source
           end
@@ -688,10 +661,10 @@ EOS
         end
       end
 
-      describe 'custom template for NonOpenGraphProperties' do
+      describe 'custom template for non-ogp pages' do
         before do
           allow(@tag).to receive(:get_properties).and_return(
-            Jekyll::Linkpreview::NonOpenGraphProperties.new({
+            Jekyll::Linkpreview::NonOpenGraphPropertiesFactory.new.from_hash({
               'title' => @title,
               'url' => @url,
               'description' => @description,
@@ -700,7 +673,7 @@ EOS
           )
         end
 
-        context 'when a custom template file for NonOpenGraphProperties exists' do
+        context 'when a custom template file for non-ogp pages exists' do
           before do
             create_nogp_template source
           end
@@ -714,7 +687,7 @@ EOS
           end
         end
 
-        context 'when a custom template file for OpenGraphProperties exists' do
+        context 'when a custom template file for ogp pages exists' do
           before do
             create_ogp_template source
           end
@@ -820,7 +793,8 @@ EOS
       it 'can spawn OpenGraphProtocolFactory' do
         expect(@tag).to receive(:fetch).exactly(1).times
         got = @tag.get_properties @url
-        expect(got.instance_of? Jekyll::Linkpreview::OpenGraphProperties).to eq true
+        expect(got.instance_of? Jekyll::Linkpreview::Properties).to eq true
+        expect(got.template_file).to eq Jekyll::Linkpreview::OpenGraphPropertiesFactory::template_file
       end
     end
 
@@ -850,7 +824,8 @@ EOS
       it 'can spawn NonOpenGraphProtocolFactory' do
         expect(@tag).to receive(:fetch).exactly(1).times
         got = @tag.get_properties @url
-        expect(got.instance_of? Jekyll::Linkpreview::NonOpenGraphProperties).to eq true
+        expect(got.instance_of? Jekyll::Linkpreview::Properties).to eq true
+        expect(got.template_file).to eq Jekyll::Linkpreview::NonOpenGraphPropertiesFactory::template_file
       end
     end
   end
