@@ -90,340 +90,344 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
   end
 
   describe '#from_page' do
-    describe 'title' do
-      context "when 'og:title' tag has a content" do
-        before do
-          @title = 'awesome.org - an awesome organization in the world'
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+    describe 'basic metadata' do
+      describe 'title' do
+        context "when 'og:title' tag has a content" do
+          before do
+            @title = 'awesome.org - an awesome organization in the world'
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:title" content="#{@title}" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'can extract title' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['title']).to eq @title
+          end
         end
 
-        it 'can extract title' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['title']).to eq @title
-        end
-      end
-
-      context "when 'og:title' tag has an empty content" do
-        before do
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:title' tag has an empty content" do
+          before do
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:title" content="" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'cannot extract title' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['title']).to eq ''
+          end
         end
 
-        it 'cannot extract title' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['title']).to eq ''
-        end
-      end
-
-      context "when 'og:title' tag does not exist" do
-        before do
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:title' tag does not exist" do
+          before do
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:url" content="#{url}" />
   </head>
 </html>
 EOS
-          )
-        end
+            )
+          end
 
-        it 'cannot extract title' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['title']).to eq nil
+          it 'cannot extract title' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['title']).to eq nil
+          end
         end
       end
-    end
 
-    describe 'url and domain' do
-      context "when 'og:url' tag is https" do
-        before do
-          @domain = 'awesome.org'
-          @url = "https://#{@domain}/about"
-          @page = MetaInspector.new(
-            @url,
-            :document => <<-EOS
+      describe 'url and domain' do
+        context "when 'og:url' tag is https" do
+          before do
+            @domain = 'awesome.org'
+            @url = "https://#{@domain}/about"
+            @page = MetaInspector.new(
+              @url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:url" content="#{@url}" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'can extract url and domain' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['url']).to eq @url
+            expect(got['domain']).to eq @domain
+          end
         end
 
-        it 'can extract url and domain' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['url']).to eq @url
-          expect(got['domain']).to eq @domain
-        end
-      end
-
-      context "when 'og:url' tag is http" do
-        before do
-          @domain = 'awesome.org'
-          @url = "https://#{@domain}/about"
-          @page = MetaInspector.new(
-            @url,
-            :document => <<-EOS
+        context "when 'og:url' tag is http" do
+          before do
+            @domain = 'awesome.org'
+            @url = "https://#{@domain}/about"
+            @page = MetaInspector.new(
+              @url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:url" content="#{@url}" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'can extract url and domain' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['url']).to eq @url
+            expect(got['domain']).to eq @domain
+          end
         end
 
-        it 'can extract url and domain' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['url']).to eq @url
-          expect(got['domain']).to eq @domain
-        end
-      end
-
-      context "when 'og:url' tag has ill-formed URL" do
-        before do
-          @domain = 'awesome.org'
-          url = "https://#{@domain}/about"
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:url' tag has ill-formed URL" do
+          before do
+            @domain = 'awesome.org'
+            url = "https://#{@domain}/about"
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:url" content="ill-formed" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'can extract url and domain' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['url']).to eq 'ill-formed'
+            expect(got['domain']).to eq @domain
+          end
         end
 
-        it 'can extract url and domain' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['url']).to eq 'ill-formed'
-          expect(got['domain']).to eq @domain
-        end
-      end
-
-      context "when 'og:url' tag has an empty content" do
-        before do
-          @domain = 'awesome.org'
-          url = "https://#{@domain}/about"
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:url' tag has an empty content" do
+          before do
+            @domain = 'awesome.org'
+            url = "https://#{@domain}/about"
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:url" content="" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'cannot extract url but can extract domain' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['url']).to eq ''
+            expect(got['domain']).to eq @domain
+          end
         end
 
-        it 'cannot extract url but can extract domain' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['url']).to eq ''
-          expect(got['domain']).to eq @domain
-        end
-      end
-
-      context "when 'og:url' tag does not exist" do
-        before do
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:url' tag does not exist" do
+          before do
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:title" content="" />
   </head>
 </html>
 EOS
-          )
-        end
+            )
+          end
 
-        it 'cannot extract url but can extract domain' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['url']).to eq nil
-          expect(got['domain']).to eq 'awesome.org'
+          it 'cannot extract url but can extract domain' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['url']).to eq nil
+            expect(got['domain']).to eq 'awesome.org'
+          end
         end
       end
-    end
 
-    describe 'image' do
-      context "when the content of 'og:image' tag is an absolute url" do
-        before do
-          root_url = 'https://awesome.org/'
-          url = URI.join(root_url, 'about').to_s
-          @image_url = URI.join(root_url, 'images/favicon.ico').to_s
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+      describe 'image' do
+        context "when the content of 'og:image' tag is an absolute url" do
+          before do
+            root_url = 'https://awesome.org/'
+            url = URI.join(root_url, 'about').to_s
+            @image_url = URI.join(root_url, 'images/favicon.ico').to_s
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:image" content="#{@image_url}" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'can extract image url' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['image']).to eq @image_url
+          end
         end
 
-        it 'can extract image url' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['image']).to eq @image_url
-        end
-      end
-
-      context "when the content of 'og:image' tag is a root-relative url" do
-        before do
-          @root_url = 'https://awesome.org/'
-          url = URI.join(@root_url, 'about').to_s
-          @image_url = '/images/favicon.ico'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when the content of 'og:image' tag is a root-relative url" do
+          before do
+            @root_url = 'https://awesome.org/'
+            url = URI.join(@root_url, 'about').to_s
+            @image_url = '/images/favicon.ico'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:image" content="#{@image_url}" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'can convert a root-relative image url to an absolute one' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['image']).to eq URI.join(@root_url, @image_url).to_s
+          end
         end
 
-        it 'can convert a root-relative image url to an absolute one' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['image']).to eq URI.join(@root_url, @image_url).to_s
-        end
-      end
-
-      context "when 'og:image' tag has an empty content" do
-        before do
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:image' tag has an empty content" do
+          before do
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:image" content="" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'cannot extract image url' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['image']).to eq ''
+          end
         end
 
-        it 'cannot extract image url' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['image']).to eq ''
-        end
-      end
-
-      context "when 'og:image' tag does not exist" do
-        before do
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:image' tag does not exist" do
+          before do
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:title" content="" />
   </head>
 </html>
 EOS
-          )
-        end
+            )
+          end
 
-        it 'cannot extract image url' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['image']).to eq nil
+          it 'cannot extract image url' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['image']).to eq nil
+          end
         end
       end
     end
 
-    describe 'description' do
-      context "when 'og:description' tag has a content" do
-        before do
-          url = 'https://awesome.org/about'
-          @description = 'An awesome organization in the world.'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+    describe 'optional metadata' do
+      describe 'description' do
+        context "when 'og:description' tag has a content" do
+          before do
+            url = 'https://awesome.org/about'
+            @description = 'An awesome organization in the world.'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:description" content="#{@description}" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'can extract description' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['description']).to eq @description
+          end
         end
 
-        it 'can extract description' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['description']).to eq @description
-        end
-      end
-
-      context "when 'og:description' tag has an empty content" do
-        before do
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:description' tag has an empty content" do
+          before do
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:description" content="" />
   </head>
 </html>
 EOS
-          )
+            )
+          end
+
+          it 'cannot extract description' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['description']).to eq ''
+          end
         end
 
-        it 'cannot extract description' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['description']).to eq ''
-        end
-      end
-
-      context "when 'og:description' tag does not exist" do
-        before do
-          url = 'https://awesome.org/about'
-          @page = MetaInspector.new(
-            url,
-            :document => <<-EOS
+        context "when 'og:description' tag does not exist" do
+          before do
+            url = 'https://awesome.org/about'
+            @page = MetaInspector.new(
+              url,
+              :document => <<-EOS
 <html>
   <head>
     <meta property="og:title" content="" />
   </head>
 </html>
 EOS
-          )
-        end
+            )
+          end
 
-        it 'cannot extract description' do
-          got = @factory.from_page(@page).to_hash
-          expect(got['description']).to eq nil
+          it 'cannot extract description' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['description']).to eq nil
+          end
         end
       end
     end
