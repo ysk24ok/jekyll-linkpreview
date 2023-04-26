@@ -34,6 +34,14 @@ jobs:
             appraisal: jekyll-37
           - ruby: "3.1"
             appraisal: jekyll-38
+          - ruby: "3.2"
+            appraisal: jekyll-35
+          - ruby: "3.2"
+            appraisal: jekyll-36
+          - ruby: "3.2"
+            appraisal: jekyll-37
+          - ruby: "3.2"
+            appraisal: jekyll-38
     steps:
       - name: Checkout
         uses: actions/checkout@v3
