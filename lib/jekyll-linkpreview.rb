@@ -40,11 +40,35 @@ module Jekyll
       def from_page(page)
         properties = page.meta_tags['property']
         og_properties = {
+          # basic metadata (https://ogp.me/#metadata)
           'title' => get_property(properties, 'og:title'),
           'type' => get_property(properties, 'og:type'),
           'url' => get_property(properties, 'og:url'),
           'image' => convert_to_absolute_url(get_property(properties, 'og:image'), page.root_url),
+          # optional metadata (https://ogp.me/#optional)
+          ## image
+          'image_secure_url' => convert_to_absolute_url(get_property(properties, 'og:image:secure_url'), page.root_url),
+          'image_type' => get_property(properties, 'og:image:type'),
+          'image_width' => get_property(properties, 'og:image:width'),
+          'image_height' => get_property(properties, 'og:image:height'),
+          'image_alt' => get_property(properties, 'og:image:alt'),
+          ## video
+          'video' => convert_to_absolute_url(get_property(properties, 'og:video'), page.root_url),
+          'video_secure_url' => convert_to_absolute_url(get_property(properties, 'og:video:secure_url'), page.root_url),
+          'video_type' => get_property(properties, 'og:video:type'),
+          'video_width' => get_property(properties, 'og:video:width'),
+          'video_height' => get_property(properties, 'og:video:height'),
+          ## audio
+          'audio' => convert_to_absolute_url(get_property(properties, 'og:audio'), page.root_url),
+          'audio_secure_url' => convert_to_absolute_url(get_property(properties, 'og:audio:secure_url'), page.root_url),
+          'audio_type' => get_property(properties, 'og:audio:type'),
+          ## other optional metadata
           'description' => get_property(properties, 'og:description'),
+          'determiner' => get_property(properties, 'og:determiner'),
+          'locale' => get_property(properties, 'og:locale'),
+          'locale_alternate' => get_property(properties, 'og:locale:alternate'),
+          'site_name' => get_property(properties, 'og:site_name'),
+          # not defined in OGP
           'domain' => page.host,
         }
         Properties.new(og_properties, @@template_file)

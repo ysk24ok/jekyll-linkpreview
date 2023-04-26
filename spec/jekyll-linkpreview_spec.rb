@@ -90,6 +90,10 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
   end
 
   describe '#from_page' do
+    let(:domain) { 'awesome.org' }
+    let(:secure_domain) { "secure.#{domain}" }
+    let(:url) { "https://#{domain}/about" }
+
     describe 'basic metadata' do
       describe 'title' do
         context "when 'og:title' tag has a content" do
@@ -365,6 +369,202 @@ EOS
     end
 
     describe 'optional metadata' do
+      describe 'og:image:secure_url' do
+        where(:image_secure_url, :expected) do
+          [
+            ["https://#{secure_domain}/ogp.jpg", "https://#{secure_domain}/ogp.jpg"],  # absolute url
+            ['/ogp.jpg', "https://#{domain}/ogp.jpg"],  # root-relative url
+          ]
+        end
+
+        with_them do
+          before do
+            @page = MetaInspector.new(url, :document => _generate_html([["og:image:secure_url", image_secure_url]]))
+          end
+
+          it "can extract 'og:image:secure_url" do
+            got = @factory.from_page(@page).to_hash
+            expect(got['image_secure_url']).to eq expected
+          end
+        end
+      end
+
+      describe 'og:image:type' do
+        before do
+          @image_type = 'image/jpeg'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:image:type", @image_type]]))
+        end
+
+        it "can extract 'og:image:type'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['image_type']).to eq @image_type
+        end
+      end
+
+      describe 'og:image:width' do
+        before do
+          @image_width = '400'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:image:width", @image_width]]))
+        end
+
+        it "can extract 'og:image:width'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['image_width']).to eq @image_width
+        end
+      end
+
+      describe 'og:image:height' do
+        before do
+          @image_height = '300'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:image:height", @image_height]]))
+        end
+
+        it "can extract 'og:image:height'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['image_height']).to eq @image_height
+        end
+      end
+
+      describe 'og:image:alt' do
+        before do
+          @image_alt = 'A shiny red apple with a bite taken out'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:image:alt", @image_alt]]))
+        end
+
+        it "can extract 'og:image:alt'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['image_alt']).to eq @image_alt
+        end
+      end
+
+      describe 'og:video' do
+        where(:video, :expected) do
+          [
+            ["https://#{domain}/movie.swf", "https://#{domain}/movie.swf"],  # absolute url
+            ['/movie.swf', "https://#{domain}/movie.swf"],  # root-relative url
+          ]
+        end
+
+        with_them do
+          before do
+            @page = MetaInspector.new(url, :document => _generate_html([["og:video", video]]))
+          end
+
+          it "can extract 'og:video'" do
+            got = @factory.from_page(@page).to_hash
+            expect(got['video']).to eq expected
+          end
+        end
+      end
+
+      describe 'og:video:secure_url' do
+        where(:video_secure_url, :expected) do
+          [
+            ["https://#{secure_domain}/movie.swf", "https://#{secure_domain}/movie.swf"],  # absolute url
+            ['/movie.swf', "https://#{domain}/movie.swf"],  # root-relative url
+          ]
+        end
+
+        with_them do
+          before do
+            @page = MetaInspector.new(url, :document => _generate_html([["og:video:secure_url", video_secure_url]]))
+          end
+
+          it "can extract 'og:video:secure_url'" do
+            got = @factory.from_page(@page).to_hash
+            expect(got['video_secure_url']).to eq expected
+          end
+        end
+      end
+
+      describe 'og:video:type' do
+        before do
+          @video_type = 'application/x-shockwave-flash'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:video:type", @video_type]]))
+        end
+
+        it "can extract 'og:video:type'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['video_type']).to eq @video_type
+        end
+      end
+
+      describe 'og:video:width' do
+        before do
+          @video_width = '400'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:video:width", @video_width]]))
+        end
+
+        it "can extract 'og:video:width'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['video_width']).to eq @video_width
+        end
+      end
+
+      describe 'og:video:height' do
+        before do
+          @video_height = '300'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:video:height", @video_height]]))
+        end
+
+        it "can extract 'og:video:height'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['video_height']).to eq @video_height
+        end
+      end
+
+      describe 'og:audio' do
+        where(:audio, :expected) do
+          [
+            ["https://#{domain}/sound.mp3", "https://#{domain}/sound.mp3"],  # absolute url
+            ['/sound.mp3', "https://#{domain}/sound.mp3"],  # root-relative url
+          ]
+        end
+
+        with_them do
+          before do
+            @page = MetaInspector.new(url, :document => _generate_html([["og:audio", audio]]))
+          end
+
+          it "can extract 'og:audio'" do
+            got = @factory.from_page(@page).to_hash
+            expect(got['audio']).to eq expected
+          end
+        end
+      end
+
+      describe 'og:audio:secure_url' do
+        where(:audio_secure_url, :expected) do
+          [
+            ["https://#{secure_domain}/sound.mp3", "https://#{secure_domain}/sound.mp3"],  # absolute url
+            ['/sound.mp3', "https://#{domain}/sound.mp3"],  # root-relative url
+          ]
+        end
+
+        with_them do
+          before do
+            @page = MetaInspector.new(url, :document => _generate_html([["og:audio:secure_url", audio_secure_url]]))
+          end
+
+          it "can extract 'og:audio:secure_url'" do
+            got = @factory.from_page(@page).to_hash
+            expect(got['audio_secure_url']).to eq expected
+          end
+        end
+      end
+
+      describe 'og:audio:type' do
+        before do
+          @audio_type = 'audio/mpeg'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:audio:type", @audio_type]]))
+        end
+
+        it "can extract 'og:audio:type'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['audio_type']).to eq @audio_type
+        end
+      end
+
       describe 'description' do
         context "when 'og:description' tag has a content" do
           before do
@@ -427,6 +627,37 @@ EOS
           it 'cannot extract description' do
             got = @factory.from_page(@page).to_hash
             expect(got['description']).to eq nil
+          end
+        end
+      end
+
+      describe 'other optional metadata' do
+        context "when other optional metadata tags have a content" do
+          before do
+            url = 'https://awesome.org/about'
+            @determiner = 'the'
+            @locale = 'en_GB'
+            @locale_alternate = ['fr_FR', 'es_ES']
+            @site_name = 'IMDb'
+            @page = MetaInspector.new(
+              url,
+              :document => _generate_html([
+                ["og:determiner", @determiner],
+                ["og:locale", @locale],
+                ["og:locale:alternate", @locale_alternate[0]],
+                ["og:locale:alternate", @locale_alternate[1]],
+                ["og:site_name", @site_name],
+              ])
+            )
+          end
+
+          it 'can extract metadata' do
+            got = @factory.from_page(@page).to_hash
+            expect(got['determiner']).to eq @determiner
+            expect(got['locale']).to eq @locale
+            # TODO: All values must be extracted.
+            expect(got['locale_alternate']).to eq @locale_alternate[0]
+            expect(got['site_name']).to eq @site_name
           end
         end
       end
@@ -877,4 +1108,12 @@ RSpec.describe "Integration test" do
       expect(got).not_to include('Liquid error: internal')
     end
   end
+end
+
+def _generate_html(properties)
+  meta_tags = []
+  properties.each do |property, content|
+    meta_tags << "<meta property=\"#{property}\" content=\"#{content}\" />"
+  end
+  "<html><head>" + meta_tags.join + "</head></html>"
 end
