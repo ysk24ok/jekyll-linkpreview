@@ -20,12 +20,9 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "jekyll", ">= 3.5", "< 5.0"
   spec.add_dependency "metainspector", "~> 5.9"
-  # appraisal 2.4.1, which is the latest version as of Jan 2023, doesn't work with bundler >= 2.4.
-  # See https://github.com/thoughtbot/appraisal/issues/199 for details.
-  spec.add_development_dependency "bundler", ">= 2.0", "< 2.4"
+  spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "rake", "~> 12.3.3"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rspec-parameterized", "~> 0.5.2"
-  spec.add_development_dependency "appraisal", "~> 2.0"
   spec.add_development_dependency "wwtd", "~> 1.4.1"
 end
