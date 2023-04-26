@@ -161,7 +161,7 @@ module Jekyll
         end
         page = fetch(url)
         properties = create_properties_from_page(page)
-        if Dir.exists?(@@cache_dir) then
+        if Dir.exist?(@@cache_dir) then
           save_cache_file(cache_filepath, properties)
         else
           # TODO: This message will be shown at all linkprevew tag
