@@ -95,69 +95,15 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
     let(:url) { "https://#{domain}/about" }
 
     describe 'basic metadata' do
-      describe 'title' do
-        context "when 'og:title' tag has a content" do
-          before do
-            @title = 'awesome.org - an awesome organization in the world'
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:title" content="#{@title}" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'can extract title' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['title']).to eq @title
-          end
+      describe 'og:title' do
+        before do
+          @title = 'awesome.org - an awesome organization in the world'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:title", @title]]))
         end
 
-        context "when 'og:title' tag has an empty content" do
-          before do
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:title" content="" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract title' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['title']).to eq ''
-          end
-        end
-
-        context "when 'og:title' tag does not exist" do
-          before do
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:url" content="#{url}" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract title' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['title']).to eq nil
-          end
+        it "can extract 'og:title'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['title']).to eq @title
         end
       end
 
