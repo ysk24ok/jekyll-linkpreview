@@ -161,6 +161,20 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
           expect(got['type']).to eq @type
         end
       end
+
+      describe 'no basic metadata' do
+        before do
+          @page = MetaInspector.new(url, :document => _generate_html([]))
+        end
+
+        it "cannot extract basic metadata" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['title']).to eq nil
+          expect(got['type']).to eq nil
+          expect(got['url']).to eq nil
+          expect(got['image']).to eq nil
+        end
+      end
     end
 
     describe 'optional metadata' do
