@@ -20,6 +20,8 @@ module Jekyll
       def to_hash_for_custom_template()
         hash_for_custom_template = {}
         @properties.each{ |key, value|
+          hash_for_custom_template[key] = value
+          # NOTE: 'link_*' variables will be deleted in v1.0.0.
           hash_for_custom_template['link_' + key] = value
         }
         hash_for_custom_template
