@@ -348,76 +348,11 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
         end
       end
 
-      describe 'description' do
-        context "when 'og:description' tag has a content" do
-          before do
-            url = 'https://awesome.org/about'
-            @description = 'An awesome organization in the world.'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:description" content="#{@description}" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'can extract description' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['description']).to eq @description
-          end
-        end
-
-        context "when 'og:description' tag has an empty content" do
-          before do
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:description" content="" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract description' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['description']).to eq ''
-          end
-        end
-
-        context "when 'og:description' tag does not exist" do
-          before do
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:title" content="" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract description' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['description']).to eq nil
-          end
-        end
-      end
-
       describe 'other optional metadata' do
         context "when other optional metadata tags have a content" do
           before do
             url = 'https://awesome.org/about'
+            @description = 'An awesome organization in the world.'
             @determiner = 'the'
             @locale = 'en_GB'
             @locale_alternate = ['fr_FR', 'es_ES']
@@ -425,6 +360,7 @@ EOS
             @page = MetaInspector.new(
               url,
               :document => _generate_html([
+                ["og:description", @description],
                 ["og:determiner", @determiner],
                 ["og:locale", @locale],
                 ["og:locale:alternate", @locale_alternate[0]],
@@ -436,6 +372,7 @@ EOS
 
           it 'can extract metadata' do
             got = @factory.from_page(@page).to_hash
+            expect(got['description']).to eq @description
             expect(got['determiner']).to eq @determiner
             expect(got['locale']).to eq @locale
             # TODO: All values must be extracted.
