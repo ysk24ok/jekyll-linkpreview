@@ -130,92 +130,22 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
         end
       end
 
-      describe 'image' do
-        context "when the content of 'og:image' tag is an absolute url" do
-          before do
-            root_url = 'https://awesome.org/'
-            url = URI.join(root_url, 'about').to_s
-            @image_url = URI.join(root_url, 'images/favicon.ico').to_s
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:image" content="#{@image_url}" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'can extract image url' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['image']).to eq @image_url
-          end
+      describe 'og:image' do
+        where(:image, :expected) do
+          [
+            ["https://#{domain}/ogp.jpg", "https://#{domain}/ogp.jpg"],  # absolute url
+            ['/ogp.jpg', "https://#{domain}/ogp.jpg"],  # root-relative url
+          ]
         end
 
-        context "when the content of 'og:image' tag is a root-relative url" do
+        with_them do
           before do
-            @root_url = 'https://awesome.org/'
-            url = URI.join(@root_url, 'about').to_s
-            @image_url = '/images/favicon.ico'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:image" content="#{@image_url}" />
-  </head>
-</html>
-EOS
-            )
+            @page = MetaInspector.new(url, :document => _generate_html([["og:image", image]]))
           end
 
-          it 'can convert a root-relative image url to an absolute one' do
+          it "can extract 'og:image'" do
             got = @factory.from_page(@page).to_hash
-            expect(got['image']).to eq URI.join(@root_url, @image_url).to_s
-          end
-        end
-
-        context "when 'og:image' tag has an empty content" do
-          before do
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:image" content="" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract image url' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['image']).to eq ''
-          end
-        end
-
-        context "when 'og:image' tag does not exist" do
-          before do
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:title" content="" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract image url' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['image']).to eq nil
+            expect(got['image']).to eq expected
           end
         end
       end
