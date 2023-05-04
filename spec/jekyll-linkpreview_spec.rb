@@ -589,6 +589,32 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
       end
 
+      def check_if_custom_template_for_ogp_pages_is_rendered(html)
+        doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+        expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
+        expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
+        expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
+        expect(doc.xpath('//p[@class="image"]').inner_text).to eq @image
+        expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
+        expect(doc.xpath('//p[@class="link_title"]').inner_text).to eq @title
+        expect(doc.xpath('//p[@class="link_url"]').inner_text).to eq @url
+        expect(doc.xpath('//p[@class="link_domain"]').inner_text).to eq @domain
+        expect(doc.xpath('//p[@class="link_image"]').inner_text).to eq @image
+        expect(doc.xpath('//p[@class="link_description"]').inner_text).to eq @description
+      end
+
+      def check_if_custom_template_for_non_ogp_pages_is_rendered(html)
+        doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
+        expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
+        expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
+        expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
+        expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
+        expect(doc.xpath('//p[@class="link_title"]').inner_text).to eq @title
+        expect(doc.xpath('//p[@class="link_url"]').inner_text).to eq @url
+        expect(doc.xpath('//p[@class="link_domain"]').inner_text).to eq @domain
+        expect(doc.xpath('//p[@class="link_description"]').inner_text).to eq @description
+      end
+
       def get_context(source_dir)
         config = { 'source' => source_dir, 'skip_config_files' => 'true' }
         Liquid::Context.new({}, {}, {
@@ -652,17 +678,7 @@ EOS
           end
           it 'can render custom template' do
             html = @tag.render get_context(source)
-            doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-            expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
-            expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
-            expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
-            expect(doc.xpath('//p[@class="image"]').inner_text).to eq @image
-            expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
-            expect(doc.xpath('//p[@class="link_title"]').inner_text).to eq @title
-            expect(doc.xpath('//p[@class="link_url"]').inner_text).to eq @url
-            expect(doc.xpath('//p[@class="link_domain"]').inner_text).to eq @domain
-            expect(doc.xpath('//p[@class="link_image"]').inner_text).to eq @image
-            expect(doc.xpath('//p[@class="link_description"]').inner_text).to eq @description
+            check_if_custom_template_for_ogp_pages_is_rendered html
           end
         end
 
@@ -702,15 +718,7 @@ EOS
           end
           it 'can render custom template' do
             html = @tag.render get_context(source)
-            doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-            expect(doc.xpath('//p[@class="title"]').inner_text).to eq @title
-            expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
-            expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
-            expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
-            expect(doc.xpath('//p[@class="link_title"]').inner_text).to eq @title
-            expect(doc.xpath('//p[@class="link_url"]').inner_text).to eq @url
-            expect(doc.xpath('//p[@class="link_domain"]').inner_text).to eq @domain
-            expect(doc.xpath('//p[@class="link_description"]').inner_text).to eq @description
+            check_if_custom_template_for_non_ogp_pages_is_rendered html
           end
         end
 
