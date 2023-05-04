@@ -7,65 +7,79 @@ require "jekyll-linkpreview/version"
 
 module Jekyll
   module Linkpreview
-    class OpenGraphProperties
-      @@template_file = 'linkpreview.html'
-
-      def initialize(title, type, url, image, description, domain)
-        @title = title
-        @type = type
-        @url = url
-        @image = image
-        @description = description
-        @domain = domain
+    class Properties
+      def initialize(properties, template_file)
+        @properties = properties
+        @template_file = template_file
       end
 
       def to_hash()
-        {
-          'title' => @title,
-          'type' => @type,
-          'url' => @url,
-          'image' => @image,
-          'description' => @description,
-          'domain' => @domain,
-        }
+        @properties
       end
 
       def to_hash_for_custom_template()
-        {
-          'link_title' => @title,
-          'link_type' => @type,
-          'link_url' => @url,
-          'link_image' => @image,
-          'link_description' => @description,
-          'link_domain' => @domain
+        hash_for_custom_template = {}
+        @properties.each{ |key, value|
+          hash_for_custom_template['link_' + key] = value
         }
+        hash_for_custom_template
       end
 
       def template_file()
-        @@template_file
+        @template_file
       end
     end
 
     class OpenGraphPropertiesFactory
+      @@template_file = 'linkpreview.html'
+
+      def self.template_file
+        @@template_file
+      end
+
       def from_page(page)
-        og_properties = page.meta_tags['property']
-        image_url = get_og_property(og_properties, 'og:image')
-        title = get_og_property(og_properties, 'og:title')
-        type = get_og_property(og_properties, 'og:type')
-        url = get_og_property(og_properties, 'og:url')
-        image = convert_to_absolute_url(image_url, page.root_url)
-        description = get_og_property(og_properties, 'og:description')
-        domain = page.host
-        OpenGraphProperties.new(title, type, url, image, description, domain)
+        properties = page.meta_tags['property']
+        og_properties = {
+          # basic metadata (https://ogp.me/#metadata)
+          'title' => get_property(properties, 'og:title'),
+          'type' => get_property(properties, 'og:type'),
+          'url' => get_property(properties, 'og:url'),
+          'image' => convert_to_absolute_url(get_property(properties, 'og:image'), page.root_url),
+          # optional metadata (https://ogp.me/#optional)
+          ## image
+          'image_secure_url' => convert_to_absolute_url(get_property(properties, 'og:image:secure_url'), page.root_url),
+          'image_type' => get_property(properties, 'og:image:type'),
+          'image_width' => get_property(properties, 'og:image:width'),
+          'image_height' => get_property(properties, 'og:image:height'),
+          'image_alt' => get_property(properties, 'og:image:alt'),
+          ## video
+          'video' => convert_to_absolute_url(get_property(properties, 'og:video'), page.root_url),
+          'video_secure_url' => convert_to_absolute_url(get_property(properties, 'og:video:secure_url'), page.root_url),
+          'video_type' => get_property(properties, 'og:video:type'),
+          'video_width' => get_property(properties, 'og:video:width'),
+          'video_height' => get_property(properties, 'og:video:height'),
+          ## audio
+          'audio' => convert_to_absolute_url(get_property(properties, 'og:audio'), page.root_url),
+          'audio_secure_url' => convert_to_absolute_url(get_property(properties, 'og:audio:secure_url'), page.root_url),
+          'audio_type' => get_property(properties, 'og:audio:type'),
+          ## other optional metadata
+          'description' => get_property(properties, 'og:description'),
+          'determiner' => get_property(properties, 'og:determiner'),
+          'locale' => get_property(properties, 'og:locale'),
+          'locale_alternate' => get_property(properties, 'og:locale:alternate'),
+          'site_name' => get_property(properties, 'og:site_name'),
+          # not defined in OGP
+          'domain' => page.host,
+        }
+        Properties.new(og_properties, @@template_file)
       end
 
       def from_hash(hash)
-        OpenGraphProperties.new(
-          hash['title'], hash['type'], hash['url'], hash['image'], hash['description'], hash['domain'])
+        Properties.new(hash, @@template_file)
       end
 
       private
-      def get_og_property(properties, key)
+      def get_property(properties, key)
         if !properties.key? key then
           return nil
         end
@@ -85,47 +99,24 @@ module Jekyll
       end
     end
 
-    class NonOpenGraphProperties
+    class NonOpenGraphPropertiesFactory
       @@template_file = 'linkpreview_nog.html'
 
-      def initialize(title, url, description, domain)
-        @title = title
-        @url = url
-        @description = description
-        @domain = domain
-      end
-
-      def to_hash()
-        {
-          'title' => @title,
-          'url' => @url,
-          'description' => @description,
-          'domain' => @domain,
-        }
-      end
-
-      def to_hash_for_custom_template()
-        {
-          'link_title' => @title,
-          'link_url' => @url,
-          'link_description' => @description,
-          'link_domain' => @domain
-        }
-      end
-
-      def template_file()
+      def self.template_file
         @@template_file
       end
-    end
 
-    class NonOpenGraphPropertiesFactory
       def from_page(page)
-        NonOpenGraphProperties.new(page.best_title, page.url, get_description(page), page.host)
+        Properties.new({
+          'title' => page.best_title,
+          'url' => page.url,
+          'description' => get_description(page),
+          'domain' => page.host,
+        }, @@template_file)
       end
 
       def from_hash(hash)
-        NonOpenGraphProperties.new(
-          hash['title'], hash['url'], hash['description'], hash['domain'])
+        Properties.new(hash, @@template_file)
       end
 
       private
