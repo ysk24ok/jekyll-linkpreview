@@ -107,118 +107,25 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
         end
       end
 
-      describe 'url and domain' do
-        context "when 'og:url' tag is https" do
-          before do
-            @domain = 'awesome.org'
-            @url = "https://#{@domain}/about"
-            @page = MetaInspector.new(
-              @url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:url" content="#{@url}" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'can extract url and domain' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['url']).to eq @url
-            expect(got['domain']).to eq @domain
-          end
+      describe 'og:url' do
+        where(:og_url) do
+          [
+            # Intentinally a domain different from 'awesome.org' is used
+            # to show the url is extracted from 'og:url'.
+            ['https://example.com/about'],  # https
+            ['http://example.com/about'],  # http
+            ['ill-formed'],  # ill-formed
+          ]
         end
 
-        context "when 'og:url' tag is http" do
+        with_them do
           before do
-            @domain = 'awesome.org'
-            @url = "https://#{@domain}/about"
-            @page = MetaInspector.new(
-              @url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:url" content="#{@url}" />
-  </head>
-</html>
-EOS
-            )
+            @page = MetaInspector.new(url, :document => _generate_html([["og:url", og_url]]))
           end
 
-          it 'can extract url and domain' do
+          it "can extract 'og:url'" do
             got = @factory.from_page(@page).to_hash
-            expect(got['url']).to eq @url
-            expect(got['domain']).to eq @domain
-          end
-        end
-
-        context "when 'og:url' tag has ill-formed URL" do
-          before do
-            @domain = 'awesome.org'
-            url = "https://#{@domain}/about"
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:url" content="ill-formed" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'can extract url and domain' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['url']).to eq 'ill-formed'
-            expect(got['domain']).to eq @domain
-          end
-        end
-
-        context "when 'og:url' tag has an empty content" do
-          before do
-            @domain = 'awesome.org'
-            url = "https://#{@domain}/about"
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:url" content="" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract url but can extract domain' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['url']).to eq ''
-            expect(got['domain']).to eq @domain
-          end
-        end
-
-        context "when 'og:url' tag does not exist" do
-          before do
-            url = 'https://awesome.org/about'
-            @page = MetaInspector.new(
-              url,
-              :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:title" content="" />
-  </head>
-</html>
-EOS
-            )
-          end
-
-          it 'cannot extract url but can extract domain' do
-            got = @factory.from_page(@page).to_hash
-            expect(got['url']).to eq nil
-            expect(got['domain']).to eq 'awesome.org'
+            expect(got['url']).to eq og_url
           end
         end
       end
@@ -605,6 +512,17 @@ EOS
             expect(got['locale_alternate']).to eq @locale_alternate[0]
             expect(got['site_name']).to eq @site_name
           end
+        end
+      end
+
+      describe 'domain' do
+        before do
+          @page = MetaInspector.new(url, :document => _generate_html([]))
+        end
+
+        it 'can extract domain' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['domain']).to eq domain
         end
       end
     end
