@@ -447,50 +447,61 @@ RSpec.describe 'Jekyll::Linkpreview::NonOpenGraphPropertiesFactory' do
   end
 
   describe '#from_page' do
-    before do
-      @title = 'awesome.org - an awesome organization in the world'
-      @domain = 'awesome.org'
-      @url = "https://#{@domain}/about"
-      @page = MetaInspector.new(
-        @url,
-        :document => <<-EOS
-<html>
-  <head>
-    <title>#{@title}</title>
-  </head>
-  <body></body>
-</html>
-EOS
-      )
-      @page_title_in_body = MetaInspector.new(
-        @url,
-        :document => <<-EOS
-<html>
-  <body>
-    <title>#{@title}</title>
-  </body>
-</html>
-      EOS
-      )
-    end
+    let(:title) { 'awesome.org - an awesome organization in the world' }
+    let(:domain) { 'awesome.org' }
+    let(:url) { "https://#{domain}/about" }
+    let(:description) { 'An awesome organization in the world.' }
 
-    context 'when parsing HTML whose title tag is in head' do
-      it 'can get title and other properties' do
-        check_properties(@factory.from_page(@page).to_hash)
+    describe 'title' do
+      where(:html) do
+        [
+          ["<html><head><title>#{title}</title></head></html>"],  # title in the head tag
+          ["<html><body><title>#{title}</title></body></html>"],  # title in the body tag
+        ]
+      end
+
+      with_them do
+        before do
+          @page = MetaInspector.new(url, :document => html)
+        end
+
+        it 'can extract title' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['title']).to eq title
+        end
       end
     end
 
-    context 'when parsing HTML whose title tag is in body' do
-      it 'can get title and other properties' do
-        check_properties(@factory.from_page(@page_title_in_body).to_hash)
+    describe 'url and domain' do
+      before do
+        @page = MetaInspector.new(url, :document => "<html></html>")
+      end
+
+      it 'can extract url and domain' do
+        got = @factory.from_page(@page).to_hash
+        expect(got['url']).to eq url
+        expect(got['domain']).to eq domain
       end
     end
 
-    def check_properties(got)
-      expect(got['title']).to eq @title
-      expect(got['url']).to eq @url
-      expect(got['description']).to eq '...'
-      expect(got['domain']).to eq @domain
+    describe 'description' do
+      where(:html, :expected) do
+        [
+          ["<html><body><p>#{description}</p></body></html>", "#{description}..."],  # p tag exists
+          ["<html></html>", '...'],  # no p tag
+        ]
+      end
+
+      with_them do
+        before do
+          @page = MetaInspector.new(url, :document => html)
+        end
+
+        it 'can extract description' do
+          got = @factory.from_page(@page).to_hash
+          expect(got['description']).to eq expected
+        end
+      end
     end
   end
 
