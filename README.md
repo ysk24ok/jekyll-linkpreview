@@ -55,35 +55,35 @@ You can override the default templates used for generating previews, both in cas
 
 2. Use built-in variables to extract data which you would like to render. Available variables are:
     * basic metadata
-        * `{{ link_title }}` for `og:title`
-        * `{{ link_type }}` for `og:type`
-        * `{{ link_image }}` for `og:image`
-        * `{{ link_url }}` for `og:url`
+        * `{{ title }}` for `og:title`
+        * `{{ type }}` for `og:type`
+        * `{{ image }}` for `og:image`
+        * `{{ url }}` for `og:url`
     * optional metadata
-        * `{{ link_description }}` for `og:description`
-        * `{{ link_determiner }}` for `og:determiner`
-        * `{{ link_locale }}` for `og:locale`
-        * `{{ link_locale_alternate }}` for `og:locale:alternate`
-        * `{{ link_site_name }}` for `og:site_name`
+        * `{{ description }}` for `og:description`
+        * `{{ determiner }}` for `og:determiner`
+        * `{{ locale }}` for `og:locale`
+        * `{{ locale_alternate }}` for `og:locale:alternate`
+        * `{{ site_name }}` for `og:site_name`
         * image
-            * `{{ link_image }}` for `og:image`
-            * `{{ link_image_secure_url }}` for `og:image:secure_url`
-            * `{{ link_image_type }}` for `og:image:type`
-            * `{{ link_image_width }}` for `og:image:width`
-            * `{{ link_image_height }}` for `og:image:height`
-            * `{{ link_image_alt }}` for `og:image:alt`
+            * `{{ image }}` for `og:image`
+            * `{{ image_secure_url }}` for `og:image:secure_url`
+            * `{{ image_type }}` for `og:image:type`
+            * `{{ image_width }}` for `og:image:width`
+            * `{{ image_height }}` for `og:image:height`
+            * `{{ image_alt }}` for `og:image:alt`
         * video
-            * `{{ link_video }}` for `og:video`
-            * `{{ link_video_secure_url }}` for `og:video:secure_url`
-            * `{{ link_video_type }}` for `og:video:type`
-            * `{{ link_video_width }}` for `og:video:width`
-            * `{{ link_video_height }}` for `og:video:height`
+            * `{{ video }}` for `og:video`
+            * `{{ video_secure_url }}` for `og:video:secure_url`
+            * `{{ video_type }}` for `og:video:type`
+            * `{{ video_width }}` for `og:video:width`
+            * `{{ video_height }}` for `og:video:height`
         * audio
-            * `{{ link_audio }}` for `og:audio`
-            * `{{ link_audio_secure_url }}` for `og:audio:secure_url`
-            * `{{ link_audio_type }}` for `og:audio:type`
+            * `{{ audio }}` for `og:audio`
+            * `{{ audio_secure_url }}` for `og:audio:secure_url`
+            * `{{ audio_type }}` for `og:audio:type`
     * non og metadata
-        * `{{ link_domain }}`
+        * `{{ domain }}`
 
 ### Template for pages where Open Graph protocol metadata does not exist
 

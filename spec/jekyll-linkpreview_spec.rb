@@ -67,6 +67,12 @@ RSpec.describe 'Jekyll::Linkpreview::Properties' do
   describe '#to_hash_for_custom_template' do
     it 'can return hash for custom template' do
       got = @properties.to_hash_for_custom_template
+      expect(got['title']).to eq @title
+      expect(got['type']).to eq @type
+      expect(got['url']).to eq @url
+      expect(got['image']).to eq @image
+      expect(got['description']).to eq @description
+      expect(got['domain']).to eq @domain
       expect(got['link_title']).to eq @title
       expect(got['link_type']).to eq @type
       expect(got['link_url']).to eq @url
@@ -594,11 +600,16 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         @filepath = File.join source, @tag.template_dir, 'linkpreview.html'
         File.open(@filepath, 'w') { |f| f.write <<-EOS
 <div>
-  <p class="title">{{ link_title }}</p>
-  <p class="url">{{ link_url }}</p>
-  <p class="domain">{{ link_domain }}</p>
-  <p class="image">{{ link_image }}</p>
-  <p class="description">{{ link_description }}</p>
+  <p class="title">{{ title }}</p>
+  <p class="url">{{ url }}</p>
+  <p class="domain">{{ domain }}</p>
+  <p class="image">{{ image }}</p>
+  <p class="description">{{ description }}</p>
+  <p class="link_title">{{ link_title }}</p>
+  <p class="link_url">{{ link_url }}</p>
+  <p class="link_domain">{{ link_domain }}</p>
+  <p class="link_image">{{ link_image }}</p>
+  <p class="link_description">{{ link_description }}</p>
 </div>
 EOS
         }
@@ -608,10 +619,14 @@ EOS
         @filepath = File.join source, @tag.template_dir, 'linkpreview_nog.html'
         File.open(@filepath, 'w') { |f| f.write <<-EOS
 <div>
-  <p class="title">{{ link_title }}</p>
-  <p class="url">{{ link_url }}</p>
-  <p class="domain">{{ link_domain }}</p>
-  <p class="description">{{ link_description }}</p>
+  <p class="title">{{ title }}</p>
+  <p class="url">{{ url }}</p>
+  <p class="domain">{{ domain }}</p>
+  <p class="description">{{ description }}</p>
+  <p class="link_title">{{ link_title }}</p>
+  <p class="link_url">{{ link_url }}</p>
+  <p class="link_domain">{{ link_domain }}</p>
+  <p class="link_description">{{ link_description }}</p>
 </div>
 EOS
         }
@@ -643,6 +658,11 @@ EOS
             expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
             expect(doc.xpath('//p[@class="image"]').inner_text).to eq @image
             expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
+            expect(doc.xpath('//p[@class="link_title"]').inner_text).to eq @title
+            expect(doc.xpath('//p[@class="link_url"]').inner_text).to eq @url
+            expect(doc.xpath('//p[@class="link_domain"]').inner_text).to eq @domain
+            expect(doc.xpath('//p[@class="link_image"]').inner_text).to eq @image
+            expect(doc.xpath('//p[@class="link_description"]').inner_text).to eq @description
           end
         end
 
@@ -687,6 +707,10 @@ EOS
             expect(doc.xpath('//p[@class="url"]').inner_text).to eq @url
             expect(doc.xpath('//p[@class="domain"]').inner_text).to eq @domain
             expect(doc.xpath('//p[@class="description"]').inner_text).to eq @description
+            expect(doc.xpath('//p[@class="link_title"]').inner_text).to eq @title
+            expect(doc.xpath('//p[@class="link_url"]').inner_text).to eq @url
+            expect(doc.xpath('//p[@class="link_domain"]').inner_text).to eq @domain
+            expect(doc.xpath('//p[@class="link_description"]').inner_text).to eq @description
           end
         end
 
