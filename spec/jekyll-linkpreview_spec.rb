@@ -703,17 +703,13 @@ EOS
         allow(@tag).to receive(:fetch).and_return(
           MetaInspector.new(
             @url,
-            :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:title" content="#{@title}" />
-    <meta property="og:type" content="#{@type}" />
-    <meta property="og:url" content="#{@url}" />
-    <meta property="og:image" content="#{@image}" />
-    <meta property="og:description" content="#{@description}" />
-  </head>
-</html>
-EOS
+            :document => _generate_html([
+              ["og:title", @title],
+              ["og:type", @type],
+              ["og:url", @url],
+              ["og:image", @image],
+              ["og:description", @description],
+            ])
           )
         )
         Dir.mkdir @tag.cache_dir
@@ -749,16 +745,12 @@ EOS
         allow(@tag).to receive(:fetch).and_return(
           MetaInspector.new(
             @url,
-            :document => <<-EOS
-<html>
-  <head>
-    <meta property="og:title" content="#{@title}" />
-    <meta property="og:type" content="#{@type}" />
-    <meta property="og:url" content="#{@url}" />
-    <meta property="og:image" content="#{@image}" />
-  </head>
-</html>
-EOS
+            :document => _generate_html([
+              ["og:title", @title],
+              ["og:type", @type],
+              ["og:url", @url],
+              ["og:image", @image],
+            ])
           )
         )
         Dir.mkdir @tag.cache_dir
@@ -779,18 +771,7 @@ EOS
     context 'when the page is missing required OGP tags' do
       before do
         allow(@tag).to receive(:fetch).and_return(
-          MetaInspector.new(
-            @url,
-            :document => <<-EOS
-<html>
-  <head>
-    <meta property="something" content="unrelated" />
-    <meta property="is" content="here" />
-    <meta property="og:title" content="is set but other required tags are missing" />
-  </head>
-</html>
-EOS
-          )
+          MetaInspector.new(@url, :document => _generate_html([["og:title", @title]]))
         )
         Dir.mkdir @tag.cache_dir
       end
