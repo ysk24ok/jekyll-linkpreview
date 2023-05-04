@@ -49,29 +49,53 @@ You can override the default templates used for generating previews, both in cas
 
 ### Template for pages where Open Graph protocol metadata exists
 
- 1. Place `linkpreview.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview.html`)
+1. Place `linkpreview.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview.html`)
      * The folder is the same one you would store files for use with `{% include fragment.html %}` tag. 
        Therefore, it *must* be under the [site's source](https://jekyllrb.com/docs/configuration/options/).
 
- 2. Use built-in variables to extract data which you would like to render. Available variables are:
-  * **link_url** i.e. `{{ link_url }}`
-  * **link_title** i.e. `{{ link_title }}`
-  * **link_type** i.e. `{{ link_type }}`
-  * **link_image** i.e. `{{ link_image }}`
-  * **link_description** i.e. `{{ link_description }}`
-  * **link_domain** i.e. `{{ link_domain }}`
+2. Use built-in variables to extract data which you would like to render. Available variables are:
+    * basic metadata
+        * `{{ link_title }}` for `og:title`
+        * `{{ link_type }}` for `og:type`
+        * `{{ link_image }}` for `og:image`
+        * `{{ link_url }}` for `og:url`
+    * optional metadata
+        * `{{ link_description }}` for `og:description`
+        * `{{ link_determiner }}` for `og:determiner`
+        * `{{ link_locale }}` for `og:locale`
+        * `{{ link_locale_alternate }}` for `og:locale:alternate`
+        * `{{ link_site_name }}` for `og:site_name`
+        * image
+            * `{{ link_image }}` for `og:image`
+            * `{{ link_image_secure_url }}` for `og:image:secure_url`
+            * `{{ link_image_type }}` for `og:image:type`
+            * `{{ link_image_width }}` for `og:image:width`
+            * `{{ link_image_height }}` for `og:image:height`
+            * `{{ link_image_alt }}` for `og:image:alt`
+        * video
+            * `{{ link_video }}` for `og:video`
+            * `{{ link_video_secure_url }}` for `og:video:secure_url`
+            * `{{ link_video_type }}` for `og:video:type`
+            * `{{ link_video_width }}` for `og:video:width`
+            * `{{ link_video_height }}` for `og:video:height`
+        * audio
+            * `{{ link_audio }}` for `og:audio`
+            * `{{ link_audio_secure_url }}` for `og:audio:secure_url`
+            * `{{ link_audio_type }}` for `og:audio:type`
+    * non og metadata
+        * `{{ link_domain }}`
 
 ### Template for pages where Open Graph protocol metadata does not exist
 
 1. Place `linkpreview_nog.html` file inside `_includes/` folder of your Jekyll site (`_includes/linkpreview_nog.html`)
-   * The folder is the same one you would store files for use with `{% include fragment.html %}` tag.
-     Therefore, it *must* be under the [site's source](https://jekyllrb.com/docs/configuration/options/).
+    * The folder is the same one you would store files for use with `{% include fragment.html %}` tag.
+      Therefore, it *must* be under the [site's source](https://jekyllrb.com/docs/configuration/options/).
 
- 2. Use built-in variables to extract data which you would like to render. Available variables are:
-  * **link_url** i.e. `{{ link_url }}`
-  * **link_title** i.e. `{{ link_title }}`
-  * **link_description** i.e. `{{ link_description }}`
-  * **link_domain** i.e. `{{ link_domain }}`
+2. Use built-in variables to extract data which you would like to render. Available variables are:
+    * `{{ link_title }}`
+    * `{{ link_url }}`
+    * `{{ link_description }}`
+    * `{{ link_domain }}`
 
 ## Development
 
