@@ -149,6 +149,18 @@ RSpec.describe 'Jekyll::Linkpreview::OpenGraphPropertiesFactory' do
           end
         end
       end
+
+      describe 'og:type' do
+        before do
+          @type = 'website'
+          @page = MetaInspector.new(url, :document => _generate_html([["og:type", @type]]))
+        end
+
+        it "can extract 'og:type'" do
+          got = @factory.from_page(@page).to_hash
+          expect(got['type']).to eq @type
+        end
+      end
     end
 
     describe 'optional metadata' do
