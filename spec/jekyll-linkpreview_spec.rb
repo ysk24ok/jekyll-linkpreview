@@ -599,7 +599,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
   <p class="domain">{{ link_domain }}</p>
   <p class="image">{{ link_image }}</p>
   <p class="description">{{ link_description }}</p>
-</dic>
+</div>
 EOS
         }
       end
@@ -612,7 +612,7 @@ EOS
   <p class="url">{{ link_url }}</p>
   <p class="domain">{{ link_domain }}</p>
   <p class="description">{{ link_description }}</p>
-</dic>
+</div>
 EOS
         }
       end
