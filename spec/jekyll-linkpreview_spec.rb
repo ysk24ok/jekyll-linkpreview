@@ -569,7 +569,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         FileUtils.rm_r File.join(source, @tag.template_dir)
       end
 
-      def check_default_template_with_image_is_rendered(html)
+      def check_if_default_template_with_image_is_rendered(html)
         doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
         expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
         expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
@@ -579,7 +579,7 @@ RSpec.describe 'Jekyll::Linkpreview::LinkpreviewTag' do
         expect(doc.xpath('//div[@class="jekyll-linkpreview-description"]').inner_text).to eq @description
       end
 
-      def check_default_template_without_image_is_rendered(html)
+      def check_if_default_template_without_image_is_rendered(html)
         doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
         expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').inner_text).to eq @title
         expect(doc.xpath('//h2[@class="jekyll-linkpreview-title"]/a').attribute('href').value).to eq @url
@@ -688,14 +688,14 @@ EOS
           end
           it 'cannot render custom template' do
             html = @tag.render get_context(source)
-            check_default_template_with_image_is_rendered html
+            check_if_default_template_with_image_is_rendered html
           end
         end
 
         context 'when no custom template file exists' do
           it 'cannot render custom template' do
             html = @tag.render get_context(source)
-            check_default_template_with_image_is_rendered html
+            check_if_default_template_with_image_is_rendered html
           end
         end
       end
@@ -728,14 +728,14 @@ EOS
           end
           it 'cannot render custom template' do
             html = @tag.render get_context(source)
-            check_default_template_without_image_is_rendered html
+            check_if_default_template_without_image_is_rendered html
           end
         end
 
         context 'when no custom template file exists' do
           it 'cannot render custom template' do
             html = @tag.render get_context(source)
-            check_default_template_without_image_is_rendered html
+            check_if_default_template_without_image_is_rendered html
           end
         end
       end
