@@ -1,6 +1,7 @@
 # Jekyll::Linkpreview
 
-[![Build Status](https://travis-ci.com/ysk24ok/jekyll-linkpreview.svg?branch=master)](https://travis-ci.com/ysk24ok/jekyll-linkpreview)
+[![Test](https://github.com/ysk24ok/jekyll-linkpreview/actions/workflows/test.yaml/badge.svg)](https://github.com/ysk24ok/jekyll-linkpreview/actions/workflows/test.yaml)
+[![Release](https://github.com/ysk24ok/jekyll-linkpreview/actions/workflows/release.yaml/badge.svg)](https://github.com/ysk24ok/jekyll-linkpreview/actions/workflows/release.yaml)
 
 Jekyll plugin to generate link preview by `{% linkpreview %}` tag. The plugin fetches [Open Graph protocol](http://ogp.me/) metadata of the designated page to generate preview. The og properties are saved as JSON for caching and it is used when rebuilding the site.
 
@@ -92,10 +93,10 @@ You can override the default templates used for generating previews, both in cas
       Therefore, it *must* be under the [site's source](https://jekyllrb.com/docs/configuration/options/).
 
 2. Use built-in variables to extract data which you would like to render. Available variables are:
-    * `{{ link_title }}`
-    * `{{ link_url }}`
-    * `{{ link_description }}`
-    * `{{ link_domain }}`
+    * `{{ title }}`
+    * `{{ url }}`
+    * `{{ description }}`
+    * `{{ domain }}`
 
 ## Development
 
