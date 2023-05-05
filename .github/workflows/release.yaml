@@ -49,7 +49,7 @@ jobs:
           chmod 0600 ~/.gem/credentials
       - name: Configure git
         run: |
-          git config --global user.email "yusuke.nishioka.0713@gmail..com"
+          git config --global user.email "yusuke.nishioka.0713@gmail.com"
           git config --global user.name "Yusuke Nishioka"
       - name: Install dependencies
         run: bundle install
