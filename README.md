@@ -93,10 +93,10 @@ You can override the default templates used for generating previews, both in cas
       Therefore, it *must* be under the [site's source](https://jekyllrb.com/docs/configuration/options/).
 
 2. Use built-in variables to extract data which you would like to render. Available variables are:
-    * `{{ link_title }}`
-    * `{{ link_url }}`
-    * `{{ link_description }}`
-    * `{{ link_domain }}`
+    * `{{ title }}`
+    * `{{ url }}`
+    * `{{ description }}`
+    * `{{ domain }}`
 
 ## Development
 
