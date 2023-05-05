@@ -112,22 +112,13 @@ module Jekyll
         Properties.new({
           'title' => page.best_title,
           'url' => page.url,
-          'description' => get_description(page),
+          'description' => page.best_description,
           'domain' => page.host,
         }, @@template_file)
       end
 
       def from_hash(hash)
         Properties.new(hash, @@template_file)
-      end
-
-      private
-      def get_description(page)
-        if !page.parsed.xpath('//p[normalize-space()]').empty? then
-          return page.parsed.xpath('//p[normalize-space()]').map(&:text).first[0..180] + "..."
-        else
-          return "..."
-        end
       end
     end
 

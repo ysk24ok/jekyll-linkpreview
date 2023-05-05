@@ -493,8 +493,15 @@ RSpec.describe 'Jekyll::Linkpreview::NonOpenGraphPropertiesFactory' do
     describe 'description' do
       where(:html, :expected) do
         [
-          ["<html><body><p>#{description}</p></body></html>", "#{description}..."],  # p tag exists
-          ["<html></html>", '...'],  # no p tag
+          # standard meta description
+          ["<html><head><meta name=\"description\" content=\"#{description}\"></head></html>", description],
+          # og:description
+          # TODO: _generate_html cannot be used here for some reason.
+          ["<html><head><meta property=\"og:description\" content=\"#{description}\"></head></html>", description],
+          # twitter:description
+          ["<html><head><meta name=\"twitter:description\" content=\"#{description}\"></head></html>", description],
+          # no description
+          ["<html></html>", nil],
         ]
       end
 
