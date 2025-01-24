@@ -106,35 +106,29 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ### Test with Jekyll site
 
-First, build a Docker image and run a container.
+First, create a new Jekyll site and move to the new directory.
 
 ```console
-$ docker build --no-cache -t jekyll_linkpreview_dev .
-$ docker run --rm -it -w /jekyll-linkpreview -p 4000:4000 jekyll_linkpreview_dev /bin/bash
+$ bundle exec jekyll new /tmp/testsite && cd /tmp/testsite
 ```
 
-Create a new Jekyll site and move into the new directory.
+Add the following line to `:jekyll_plugins` group of Gemfile.
 
-```console
-# bundle exec jekyll new testsite && cd testsite
 ```
-
-Add this line to `:jekyll_plugins` group of Gemfile.
-
-```console
 gem "jekyll-linkpreview", git: "https://github.com/YOUR_ACCOUNT/jekyll-linkpreview", branch: "YOUR_BRANCH"
 ```
 
-Install the dependecies to your new site.
+Install the dependecies for the new site.
 
 ```console
-# bundle install
+$ bundle config set --local path vendor/bundle
+$ bundle install
 ```
 
-Add a tag such as `{% linkpreview "https://github.com/ysk24ok/jekyll-linkpreview" %}` to `index.markdown` , then start a Jekyll server.
+Add a tag such as `{% linkpreview "https://github.com/ysk24ok/jekyll-linkpreview" %}` to `index.markdown`, then start a Jekyll server.
 
 ```console
-# bundle exec jekyll serve --host 0.0.0.0
+$ bundle exec jekyll serve
 ```
 
 ## Contributing
